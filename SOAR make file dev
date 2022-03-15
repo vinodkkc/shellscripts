@@ -1,0 +1,141 @@
+HOST=127.0.0.1
+THEHIVE_SERVER_NAME=thehive.acds.net.in
+CORTEX_SERVER_NAME=cortex.acds.net.in
+HIVE_VERSION=4.1.9-1
+CORTEX_VERSION=3.1.1-1
+ELASTICSEARCH_VERSION=7.11.1
+NGINX_VERSION=1.19.5
+CASSANDRA_VERSION=3.11
+BACKEND_VERSION=0.9.52
+FRONTEND_VERSION=0.9.52
+ORBORUS_VERSION=0.9.56
+ACDS_SHUFFLE_VERSION=1.0
+ACDS_PFSENSE_VERSION=1.0
+ACDS_MAILER_VERSION=1.0
+ACDS_ITOP_VERSION=1.0
+ACDS_IP2LOC_VERSION=1.0
+PLUGINS_DIR=plugins
+BUILD_DIR=build
+DOCKER_DIR=docker/docker-thehive
+TMP_DOCKER_DIR=docker-thehive
+SHUFFLE_DOCKER_DIR=Shuffle/Docker/docker-shuffle
+OUT_DIR=release
+ifneq ($(BUILD_NUMBER),)
+ACDS_VERSION=_$(BUILD_NUMBER)
+else
+ACDS_VERSION=
+endif
+HIVE_TAR=thehive_$(HIVE_VERSION)$(ACDS_VERSION).tar.gz
+DOCKERHUB_REGISTRY=docker.acds.net.in/dockerhubproxy
+ACDS_REGISTRY=docker.acds.net.in/soar
+all: clean build
+build: build_analyzers build_thehive build_shuffle
+setup:
+	echo "Installing tools for buiilding thehive scala code"
+	./setup.sh
+build_analyzers:
+	echo "Starting custom analyzer, responders build #$(BUILD_NUMBER)"
+	mkdir -p $(BUILD_DIR); mkdir -p $(OUT_DIR);
+	cd $(PLUGINS_DIR); ./build.sh $(ACDS_REGISTRY)
+	cd $(PLUGINS_DIR);  tar -czvf plugins.tar.gz *.tar
+	mv $(PLUGINS_DIR)/*.tar.gz $(OUT_DIR)/
+	mv $(PLUGINS_DIR)/analyzers/analyzers.json $(DOCKER_DIR)/vol/cortex
+	mv $(PLUGINS_DIR)/responders/responders.json $(DOCKER_DIR)/vol/cortex
+	echo "Custom Analyzers, Responders generated successfully."
+	
+build_shuffle:
+	echo "Starting shuffle build #$(BUILD)"
+	mkdir -p $(BUILD_DIR); mkdir -p $(OUT_DIR);
+	
+	sed -i '/BACKEND_VERSION/c\' $(SHUFFLE_DOCKER_DIR)/.env
+	echo BACKEND_VERSION=$(BACKEND_VERSION) >> $(SHUFFLE_DOCKER_DIR)/.env
+	sed -i '/FRONTEND_VERSION/c\' $(SHUFFLE_DOCKER_DIR)/.env
+	echo FRONTEND_VERSION=$(FRONTEND_VERSION) >> $(SHUFFLE_DOCKER_DIR)/.env
+	sed -i '/ORBORUS_VERSION/c\' $(SHUFFLE_DOCKER_DIR)/.env
+	echo ORBORUS_VERSION=$(ORBORUS_VERSION) >> $(SHUFFLE_DOCKER_DIR)/.env
+        
+	cd Shuffle/Docker/; ./build_shuffle.sh false
+	mv Shuffle/Docker/*.tar.gz $(OUT_DIR)/
+	cp Shuffle/Docker/deploy_shuffle.sh $(OUT_DIR)/
+	echo "The Shuffle deployment bundle is generated successfully."
+build_thehive:
+	echo "Starting thehive build #${BUILD}"
+	mkdir -p $(BUILD_DIR); mkdir -p $(OUT_DIR);
+	npm config set strict-ssl false
+	cd development/thehive/frontend; npm install; npm install --global bower; bower install; grunt build
+	cd development/thehive; ./sbt docker:stage
+	cd development/thehive/target/docker/stage; docker build . -t $(DOCKERHUB_REGISTRY)/thehiveproject/thehive4:${HIVE_VERSION}
+	
+	sed -i '/HIVE_VERSION/c\' $(DOCKER_DIR)/.env
+	echo HIVE_VERSION=$(HIVE_VERSION) >> $(DOCKER_DIR)/.env
+	sed -i '/CORTEX_VERSION/c\' $(DOCKER_DIR)/.env
+	echo CORTEX_VERSION=$(CORTEX_VERSION) >> $(DOCKER_DIR)/.env
+	sed -i '/ELASTICSEARCH_VERSION/c\' $(DOCKER_DIR)/.env
+	echo ELASTICSEARCH_VERSION=$(ELASTICSEARCH_VERSION) >> $(DOCKER_DIR)/.env
+	sed -i '/CASSANDRA_VERSION/c\' $(DOCKER_DIR)/.env
+	echo CASSANDRA_VERSION=$(CASSANDRA_VERSION) >> $(DOCKER_DIR)/.env
+	sed -i '/NGINX_VERSION/c\' $(DOCKER_DIR)/.env
+	echo NGINX_VERSION=$(NGINX_VERSION) >> $(DOCKER_DIR)/.env
+	sed -i '/REGISTRY/c\' $(DOCKER_DIR)/.env
+	echo "REGISTRY=$(DOCKERHUB_REGISTRY)" >> $(DOCKER_DIR)/.env
+	cp -a $(DOCKER_DIR) $(TMP_DOCKER_DIR); 
+	cd $(TMP_DOCKER_DIR); sed -i '/server_name/c\server_name $(THEHIVE_SERVER_NAME)' vol/nginx/thehive.conf
+	cd $(TMP_DOCKER_DIR); sed -i '/server_name/c\server_name $(CORTEX_SERVER_NAME)' vol/nginx/cortex.conf
+	cd $(TMP_DOCKER_DIR);  docker-compose up -d
+	docker commit $$( docker ps | grep thehive4 | awk '{print $$1}') $(ACDS_REGISTRY)/thehiveproject/thehive4:$(HIVE_VERSION)$(ACDS_VERSION)
+	docker commit $$( docker ps | grep cortex | awk '{print $$1}') $(ACDS_REGISTRY)/thehiveproject/cortex:$(CORTEX_VERSION)$(ACDS_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/library/elasticsearch:$(ELASTICSEARCH_VERSION) $(ACDS_REGISTRY)/library/elasticsearch:$(ELASTICSEARCH_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/library/nginx:$(NGINX_VERSION) $(ACDS_REGISTRY)/library/nginx:$(NGINX_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/library/cassandra:$(CASSANDRA_VERSION) $(ACDS_REGISTRY)/library/cassandra:$(CASSANDRA_VERSION)
+	docker image save -o $(BUILD_DIR)/thehive_$(HIVE_VERSION)$(ACDS_VERSION).tar $(ACDS_REGISTRY)/thehiveproject/thehive4:$(HIVE_VERSION)$(ACDS_VERSION)
+	docker image save -o $(BUILD_DIR)/cortex_$(CORTEX_VERSION)$(ACDS_VERSION).tar $(ACDS_REGISTRY)/thehiveproject/cortex:$(CORTEX_VERSION)$(ACDS_VERSION)
+	docker image save -o $(BUILD_DIR)/elasticsearch.tar $(ACDS_REGISTRY)/library/elasticsearch:$(ELASTICSEARCH_VERSION)
+	docker image save -o $(BUILD_DIR)/nginx.tar $(ACDS_REGISTRY)/library/nginx:$(NGINX_VERSION) 
+	docker image save -o $(BUILD_DIR)/cassandra.tar $(ACDS_REGISTRY)/library/cassandra:$(CASSANDRA_VERSION) 
+	cd $(BUILD_DIR);  tar -czvf $(HIVE_TAR) *.tar
+	mv $(BUILD_DIR)/*.tar.gz $(OUT_DIR)/
+	cp -r $(DOCKER_DIR) $(OUT_DIR)/
+	sed -i '/REGISTRY/c\' $(OUT_DIR)/docker-thehive/.env
+	echo "REGISTRY=$(ACDS_REGISTRY)" >> $(OUT_DIR)/docker-thehive/.env
+	cp docker/deploy_soar.sh $(OUT_DIR)/
+	cp -r playbooks $(OUT_DIR)/
+	echo "TheHive deployment bundle " $(OUT_DIR)/$(HIVE_TAR) "generated successfully."
+clean:
+	rm -rf $(BUILD_DIR);
+	[ -e $(TMP_DOCKER_DIR)/docker-compose.yml ] && ( cd $(TMP_DOCKER_DIR); docker-compose down -v --rmi all --remove-orphans; echo SUCCESS ) || echo "No docker-compose.yml to clean"
+	# Remove thehive target folders
+	cd development/thehive; ./sbt clean
+	# Remove temp docker folder
+	sudo rm -rf $(TMP_DOCKER_DIR)
+	# Remove the shuffle temp folder
+	sudo rm -rf Shuffle/Docker/docker-shuffle/shuffle-database
+	sudo rm -rf Shuffle/Docker/docker-shuffle/shuffle-files
+	#Remove docker images of analyzers and responders
+	sudo rm -rf $(PLUGINS_DIR)/*.tar
+	docker rmi -f  $$( docker image ls | grep acds-mailer | awk '{print $$3}' ) || true
+	docker container stop $$( docker container ls | grep registry | awk '{print $$1}') || true
+	docker rmi -f  $$( docker image ls | grep registry | awk '{print $$3}' ) || true
+cleanall:
+	# stop all containers
+	( docker container stop $$(docker container ls -aq) ) && ( echo "Stopped Containers" ) 
+	# remove all containers
+	( docker container rm $$(docker container ls -aq) ) && ( echo "Removed Containers" ) 
+	# remove all images
+	( docker rmi -f $$(docker images -a -q) ) && ( echo "Removed Images" ) 
+	# remove all volumes
+	( docker volume rm $$(docker volume ls -q) ) && ( echo "Remove Volumes" ) 
+release:
+	# Push the images to docker registry
+	echo "Pushing docker images to registry...."
+	docker push $(ACDS_REGISTRY)/library/elasticsearch:$(ELASTICSEARCH_VERSION)
+	docker push $(ACDS_REGISTRY)/library/nginx:$(NGINX_VERSION)
+	docker push $(ACDS_REGISTRY)/library/cassandra:$(CASSANDRA_VERSION)
+	docker push $(ACDS_REGISTRY)/thehiveproject/thehive4:$(HIVE_VERSION)$(ACDS_VERSION)
+	docker push $(ACDS_REGISTRY)/thehiveproject/cortex:$(CORTEX_VERSION)$(ACDS_VERSION)
+	docker push $(ACDS_REGISTRY)/acds-shuffle:$(ACDS_SHUFFLE_VERSION)
+	docker push $(ACDS_REGISTRY)/acds-pfsense:$(ACDS_PFSENSE_VERSION)
+	docker push $(ACDS_REGISTRY)/acds-mailer:$(ACDS_MAILER_VERSION)
+	docker push $(ACDS_REGISTRY)/acds-itop:$(ACDS_ITOP_VERSION)
+	docker push $(ACDS_REGISTRY)/acds-ip2location:$(ACDS_IP2LOC_VERSION)
+	echo "Images successfully pushed to registry."
+.PHONY: clean build build_analyzers build_thehive build_shuffle release all
