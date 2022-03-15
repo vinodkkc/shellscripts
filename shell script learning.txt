@@ -1,0 +1,1002 @@
+special variable
+-----------------
+For example, the $ character represents the process ID number, or PID, of the current shell −
+echo $$
+A)The above command writes the PID of the current shell −
+29949
+
+--------------------------------------------------------
+
+$0 --The filename of the current script.
+$n --These variables correspond to the arguments with which a script was invoked. Here n is a positive decimal number corresponding to the position of an argument (the first argument is $1, the second argument is $2, and so on).
+$# --The number of arguments supplied to a script.
+$* --All the arguments are double quoted. If a script receives two arguments, $* is equivalent to $1 $2.
+$@ --All the arguments are individually double quoted. If a script receives two arguments, $@ is equivalent to $1 $2.
+$? --The exit status of the last command executed.
+$$ --The process number of the current shell. For shell scripts, this is the process ID under which they are executing.
+$! --The process number of the last background command.
+example:
+#!/bin/sh
+
+echo "File Name: $0"
+echo "First Parameter : $1"
+echo "Second Parameter : $2"
+echo "Quoted Values: $@"
+echo "Quoted Values: $*"
+echo "Total Number of Parameters : $#"
+
+ans:
+$./test.sh Zara Ali
+File Name : ./test.sh
+First Parameter : Zara
+Second Parameter : Ali
+Quoted Values: Zara Ali
+Quoted Values: Zara Ali
+Total Number of Parameters : 2
+------------------------------------------------------------
+Special Parameters $* and $@
+
+#!/bin/sh
+
+for TOKEN in $*
+do
+   echo $TOKEN
+done
+Here is a sample run for the above script −
+
+$./test.sh Zara Ali 10 Years Old
+Zara
+Ali
+10
+Years
+Old
+Note − Here do...done is a kind of loop that will be covered in a subsequent tutorial.
+===========================================
+Defining Array Values:-
+
+array_name[index]=value
+
+NAME[0]="Zara"
+NAME[1]="Qadir"
+NAME[2]="Mahnaz"
+NAME[3]="Ayan"
+NAME[4]="Daisy"
+
+${array_name[index]}
+
+#!/bin/sh
+
+NAME[0]="Zara"
+NAME[1]="Qadir"
+NAME[2]="Mahnaz"
+NAME[3]="Ayan"
+NAME[4]="Daisy"
+echo "First Index: ${NAME[0]}"
+echo "Second Index: ${NAME[1]}"
+
+o/p
+----
+$./test.sh
+First Index: Zara
+Second Index: Qadir
+
+You can access all the items in an array in one of the following ways −
+
+${array_name[*]}
+${array_name[@]}
+
+#!/bin/sh
+
+NAME[0]="Zara"
+NAME[1]="Qadir"
+NAME[2]="Mahnaz"
+NAME[3]="Ayan"
+NAME[4]="Daisy"
+echo "First Method: ${NAME[*]}"
+echo "Second Method: ${NAME[@]}"
+The above example will generate the following result −
+
+$./test.sh
+First Method: Zara Qadir Mahnaz Ayan Daisy
+Second Method: Zara Qadir Mahnaz Ayan Daisy
+=============================================
+-eq	Checks if the value of two operands are equal or not; if yes, then the condition becomes true.	[ $a -eq $b ] is not true.
+-ne	Checks if the value of two operands are equal or not; if values are not equal, then the condition becomes true.	[ $a -ne $b ] is true.
+-gt	Checks if the value of left operand is greater than the value of right operand; if yes, then the condition becomes true.	[ $a -gt $b ] is not true.
+-lt	Checks if the value of left operand is less than the value of right operand; if yes, then the condition becomes true.	[ $a -lt $b ] is true.
+-ge	Checks if the value of left operand is greater than or equal to the value of right operand; if yes, then the condition becomes true.	[ $a -ge $b ] is not true.
+-le	Checks if the value of left operand is less than or equal to the value of right operand; if yes, then the condition becomes true.	[ $a -le $b ] is true.
+
+===============================================================
+Nesting while Loops
+
+Syntax
+while command1 ; # this is loop1, the outer loop
+do
+   Statement(s) to be executed if command1 is true
+
+   while command2 ; # this is loop2, the inner loop
+   do
+      Statement(s) to be executed if command2 is true
+   done
+
+   Statement(s) to be executed if command1 is true
+done
+--------i-----------
+example:
+#!/bin/sh
+
+a=0
+while [ "$a" -lt 10 ]    # this is loop1
+do
+   b="$a"
+   while [ "$b" -ge 0 ]  # this is loop2
+   do
+      echo -n "$b "
+      b=`expr $b - 1`
+   done
+   echo
+   a=`expr $a + 1`
+done
+
+o/p
+---
+This will produce the following result. It is important to note how echo -n works here. Here -n option lets echo avoid printing a new line character.
+
+0
+1 0
+2 1 0
+3 2 1 0
+4 3 2 1 0
+5 4 3 2 1 0
+6 5 4 3 2 1 0
+7 6 5 4 3 2 1 0
+8 7 6 5 4 3 2 1 0
+9 8 7 6 5 4 3 2 1 0
+========================================
+The break statement
+
+The continue statement
+
+Example
+Here is a simple example that uses the while loop to display the numbers zero to nine −
+
+#!/bin/sh
+
+a=10
+
+until [ $a -lt 10 ]
+do
+   echo $a
+   a=`expr $a + 1`
+done
+This loop continues forever because a is always greater than or equal to 10 and it is never less than 10.
+
+------------------------------------------
+
+Example
+Here is a simple example which shows that loop terminates as soon as a becomes 5 −
+
+#!/bin/sh
+
+a=0
+
+while [ $a -lt 10 ]
+do
+   echo $a
+   if [ $a -eq 5 ]
+   then
+      break
+   fi
+   a=`expr $a + 1`
+done
+Upon execution, you will receive the following result −
+
+0
+1
+2
+3
+4
+5
+-----------------------------------
+
+Here is a simple example of nested for loop. This script breaks out of both loops if var1 equals 2 and var2 equals 0 −
+
+Live Demo
+#!/bin/sh
+
+for var1 in 1 2 3
+do
+   for var2 in 0 5
+   do
+      if [ $var1 -eq 2 -a $var2 -eq 0 ]
+      then
+         break 2
+      else
+         echo "$var1 $var2"
+      fi
+   done
+done
+
+o/p
+----
+1 0
+1 5
+-------------------------------------------------
+The continue statement
+
+#!/bin/sh
+
+NUMS="1 2 3 4 5 6 7"
+
+for NUM in $NUMS
+do
+   Q=`expr $NUM % 2`
+   if [ $Q -eq 0 ]
+   then
+      echo "Number is an even number!!"
+      continue
+   fi
+   echo "Found odd number"
+done
+
+o/p
+---
+Found odd number
+Number is an even number!!
+Found odd number
+Number is an even number!!
+Found odd number
+Number is an even number!!
+Found odd number
+----------------------------------------------
+Operator	Description	Example
+!	This is logical negation. This inverts a true condition into false and vice versa.	[ ! false ] is true.
+-o	This is logical OR. If one of the operands is true, then the condition becomes true.	[ $a -lt 20 -o $b -gt 100 ] is true.
+-a	This is logical AND. If both the operands are true, then the condition becomes true otherwise false.	[ $a -lt 20 -a $b -gt 100 ] is false.
+
+---------------------------------------------
+String Operators
+The following string operators are supported by Bourne Shell.
+
+Assume variable a holds "abc" and variable b holds "efg" then −
+
+Show Examples
+
+Operator	Description	Example
+=	Checks if the value of two operands are equal or not; if yes, then the condition becomes true.	[ $a = $b ] is not true.
+!=	Checks if the value of two operands are equal or not; if values are not equal then the condition becomes true.	[ $a != $b ] is true.
+-z	Checks if the given string operand size is zero; if it is zero length, then it returns true.	[ -z $a ] is not true.
+-n	Checks if the given string operand size is non-zero; if it is nonzero length, then it returns true.	[ -n $a ] is not false.
+str	Checks if str is not the empty string; if it is empty, then it returns false.	[ $a ] is not false.
+================================================
+
+File Test Operators
+We have a few operators that can be used to test various properties associated with a Unix file.
+
+Assume a variable file holds an existing file name "test" the size of which is 100 bytes and has read, write and execute permission on −
+
+Show Examples
+
+Operator	Description	Example
+-b file	Checks if file is a block special file; if yes, then the condition becomes true.	[ -b $file ] is false.
+-c file	Checks if file is a character special file; if yes, then the condition becomes true.	[ -c $file ] is false.
+-d file	Checks if file is a directory; if yes, then the condition becomes true.	[ -d $file ] is not true.
+-f file	Checks if file is an ordinary file as opposed to a directory or special file; if yes, then the condition becomes true.	[ -f $file ] is true.
+-g file	Checks if file has its set group ID (SGID) bit set; if yes, then the condition becomes true.	[ -g $file ] is false.
+-k file	Checks if file has its sticky bit set; if yes, then the condition becomes true.	[ -k $file ] is false.
+-p file	Checks if file is a named pipe; if yes, then the condition becomes true.	[ -p $file ] is false.
+-t file	Checks if file descriptor is open and associated with a terminal; if yes, then the condition becomes true.	[ -t $file ] is false.
+-u file	Checks if file has its Set User ID (SUID) bit set; if yes, then the condition becomes true.	[ -u $file ] is false.
+-r file	Checks if file is readable; if yes, then the condition becomes true.	[ -r $file ] is true.
+-w file	Checks if file is writable; if yes, then the condition becomes true.	[ -w $file ] is true.
+-x file	Checks if file is executable; if yes, then the condition becomes true.	[ -x $file ] is true.
+-s file	Checks if file has size greater than 0; if yes, then condition becomes true.	[ -s $file ] is true.
+-e file	Checks if file exists; is true even if file is a directory but exists.	[ -e $file ] is true
+==============================================
+The if...else statements
+If else statements are useful decision-making statements which can be used to select an option from a given set of options.
+
+Unix Shell supports following forms of if…else statement −
+
+if...fi statement
+if...else...fi statement
+if...elif...else...fi statement
+===========================================
+dif command & grep comand with regular expresions
+
+file1 sample 
+
+diff file1 sample
+
+diff -c file1 sample
+diff -y file1 sample ----side by side
+
+grep dog grs
+grep he*o grs
+grep file[1] grs
+
+un matched
+^ - not
+grep file [^1234] grs
+
+$ - last line
+grep test$ grs
+
+^ -first line
+grep ^test grs
+
+.*
+grep test.*txt grs
+
+\ ---nothing
+grep test\.$ grs
+
+grep h[aiou]t grs
+
+grep b[0l] [oa]t grs
+
+===============================
+head tail sort sed
+
+more -file perusal filter for crt viewing
+sort - sorting the text -u =sort by alphabet, -r =Reversed
+sort -n = coloumn number , -k =column
+head - see the content header data . -n 5, -n -5,-4
+tail -see file content below of the file . -n 5,-f 10,-f-s 6,
+tail -f file1 file2
+
+first command output comes to second command output
+cat message | more ----it shows only page level using more
+
+sort file 1 ----it comes alphabet order
+
+sort -nk1 grs column1
+sort -nk2 grs  column2
+sort -nk3 grs    column3 
+sort -u file1 
+sort -k3 grs
+sort -rk3 grs ----->reverse sort
+
+cp grs grs1
+
+sort -u grs grs1 ----duplicate will removing
+df -h | sort -nk3
+
+
+head  --- first 10 lines
+-----
+head -4 grs
+
+cat grs | head -3
+head -n -5 grs
+
+tail  ----last lines
+--------------
+tail -2 grs
+
+tail -f file1 grs  --> multiple files
+
+live updating file
+-------------------
+open duplicate session
+echo "test" >> file1
+-----------------------------------------
+------------------------------------------
+tr command
+wc comand
+
+tr a-z A-Z
+tr a-z A-z < file1
+tr A-Z a-z |tr -d s
+
+echo "Testing tr command arkit"| tr[:space:]'\t'
+
+tr a-z A-Z small to large conversationn
+shell scripting
+SHELL SCRIPTING
+
+tr a-z A-Z < file1
+
+cat file2 | tr -d A ----delete A in data
+
+echo "12345 are the numbers" | tr -d [:digit:]----> digits deleted
+
+echo "this is the line" | tr [:space:] '\t'
+9008608895
+wc command
+------------
+wc file1
+wc -l file ----lines in the file
+wc -c file 1 --- lines in a character
+wc -w file1 ----words
+=========================================================
+
+free -m, free -g, free -h, free -k, free -s 2, free -c 3
+
+df -h, df -ht,df -m,df -i,df -t ext4,df -a,df -T
+
+du -a, du -ah, du -sh,du -cbha --time,
+
+fdisk -l, fdisk -v, fdisk /dev/sda
+
+parted /dev/sda unit GB print free
+
+free -s 2 ----every 2 second shows
+=============================================
+
+command line interface
+
+man 
+whereis
+whatis
+help
+command --help
+pinfo
+
+=============================================
+whoami
+w
+who -r, who -q, who -u,who -b
+
+finger root
+
+cat /etc/passwd
+uname -a,uname -r,uname -v,uname -s,uname -i,uname -n, uname -o
+
+hostname -f,hostname -i, hostname
+
+hostnamectl set-hostname shell script
+hostnamectl status
+
+=======================================
+find,locate,search for files & Directories
+
+locate
+locate thanks
+
+updatedb
+
+
+find
+------
+ find /root ravi
+
+find /root -name ravi
+
+find / -name ravi
+
+find . -name ravi ----current directory
+
+find /root -name ravi
+
+find /root -name "ravi*"
+
+find /root -type f -name "ravi*" ---file
+
+find /root -type d -name "ravi*"  ---directory
+
+find /root -iname RAVI ---ignore the case
+
+find /root -not -name ravi ----expect ravi findout all
+
+find /root ! -name ravi ----expect ravi findout all
+
+find /root -name ".*"
+
+find /root -type f -perm 777 ----file permsions
+
+multiple directories
+------------
+
+find /root /etc /var -name ravi
+
+find /root -maxdepth 1 -perm /u=r  ----> permission files
+
+find /root -mtime 10 ---> modified files
+
+find /root -atime 10 --->access files
+
+find /root -mtime +10 -mtime -20
+
+find /root -cmin -60 --->last 60 minuteas
+
+find /root -mmin -60 ---> modify minutes
+
+find /root -size 1m
+
+find /root -size 100M
+
+find /root -type f empty
+
+find /root -group root
+
+find /root -type f -name "*.txt" -exec rm -f {} \;----> all the files will removing
+
+find /root -type f -name "*.txt" -exec rm -f {} \; | awk '{ print $9 " : " $5}'
+
+
+
+==============================
+
+top command
+
+top and ps
+
+top ---->dynamic real time updates
+
+===========================================
+vi and nano editor
+
+nan0 
+
+----------------------------------
+
+sed,awk,vmstat,netstat,ifconfig,ftp and mail
+
+sed 's/arkit/Tech Tutorials/' sedexample ----replacing arkit to Tech
+
+sed 's/arkit/Tech Tutorials/2' sed example ---> second order
+
+sed 's/arkit/Tech Tutorials/g' sed example -----> g means total words changes in file
+
+ sed 's/arkit/Tech Tutorials/2g' sed example ----.>second one will occur
+
+script command line
+-----------------------
+sed 's/^\(arkit\)$/#\1/1' sedexample
+
+sed -i 's/^\(arkit\)$/#\1/1' sedexample ----permanent using i
+
+sed 's/http:\/\//www./' sedexample --->http to www
+
+sed '3 s/arkit/TechTutorials/' sedexample ---> 3rd line
+
+sed '2,3 s/arkit/TechTutorials/' sedexample
+
+sed '3 d' sedexample
+
+AWK
+----
+cat awk |awk '{ print $3,$9 }' --->3,9 lines rows
+
+awk 'BEGIN {sum=o} {sum=sum+$7} END {print sum}' awk example  --->calculations
+
+#!/usr/bin/awk -f
+
+BEGIN {sum=0}
+{sum=sum+$7}
+END {print sum}
+
+excution --awk -f sumawk awkexample
+
+awk '{if($3 == "arkit") print $0;}' awk example -----print only arthik lines only
+
+netstat----linux
+----------------
+vmstat -a --- all data
+
+vmstat -f ----forks
+
+vmstat -m ----memory
+
+vmstat -t 
+
+vmstat -t 3 10 ---time
+
+-------------------------------
+
+netstat
+-------
+netstat -tunlp ---------listen ports
+
+ftp ----remote server user and ipaddress
+ftp ftp@10.11.23.124
+
+--------------------
+mail
+
+1
+
+mail -s "hello" adim@10c1lhost-----cd /var/spool/mail/admin
+
+
+
+echo "Testing mail" | mail -s "hello" admin@localhost
+
+mail -s "hello" adim@10c1lhost < sed example
+
+mail -s "hello" adim@10c1lhost -a sedexample
+
+mail -s "hello" adim@10c1lhost -c admin@1ocalhost -b root@10calhost <sed example
+
+============================================
+vn stat command to traffic monitoring network
+
+==========================================
+
+cut:
+---
+removes the sections of the each line
+
+echo "ravi" | cut -b 2 ---2nd byte
+
+echo "ravi" | cut -b 2-4 ---2 bytes
+
+ echo "ravi" | cut -c 2 ---> display only 
+
+cat cuteexample | cut -c5- ---> first to last
+
+  cut -d ':' -f1 /eetc/passwd |grep admin ----o/p admin
+
+cut -d ':' -f1 1,4,3 /eetc/passwd |grep admin
+
+cut -d ':' -f1 1-5 /eetc/passwd |grep admin
+ 
+cat /etc/passwd | cut -d ':' --complement -s -f5  ----field removing
+
+cat /etc/passwd | cut -d':' -s -f1,4,2 --output-delimeter '#'
+
+
+==============================================
+Paste Command Merging Multiple File Lines 
+
+ file1 file2
+
+paste 1 2
+paste -s 1 2 
+
+paste -d, -s 2 ---seperated by komma,
+
+paste -d'/n' 1 2 ---merge both files
+
+paste -d '' file[AB] | cut -d '' -f 1,2,4,5
+==============================================
+chmod and chown
+===============
+compress files and directories
+
+tar -cvf archieve .tar ark*
+
+tar -uvf archieve.tar ark*  ---updated file tar loaded
+
+tar -czvf compress.tar.gz ark.*
+
+tar -cjvf bunzip.tar.bz2 ark.*
+
+tar -xvf compress.tar.gz
+=================================
+
+
+schdeduling future jobs using crontab
+
+
+cat /etc/crontab
+crontab
+
+minutes hour mondayday month dayofweek
+*/1 
+
+crontab -e ----> edit
+*/1 * * * * echo "shell scripting ">> /tmp/shell 2&1> /var/log/cronmes.log ---> redirect
+
+ 
+crontab -1 ----list of jobs
+
+mig night
+
+59 23 *** echo "every midnight">> /tmp/midnight.log
+
+everyweek on monday
+
+30 10 * * 1 echo "every monday" >> /tmp/moday.log
+
+59 23 31 12 * echo "happynew year" >> /tmp/newyear.log
+
+crontab -u admin ---> another user
+
+=========================================
+
+
+
+pathsetup for env varaiables
+------------------------------
+
+echo $PAATH
+
+PATH=/home/aravi/  --->pathsetup
+echo $PATH
+
+mkdir /commands
+PATH:$PATH:/commands/
+cd /commands/
+
+=====================================
+symbols in shell scripting
+
+` ----reverse coat
+
+{} ----brases
+
+ - minus
+ = eqal to
+ < lssthan
+  > greater than
+  ? queion mark ---wildcard characters
+  / black slash 
+======================================
+first shell script
+=======================================
+quotation marks| Double,Single,Reverse quotes
+
+
+""--display variables
+''---display data
+``---it excutes as a command
+======================================
+variables
+===========================
+special variables
+
+$* - it stores the complete set of positional parameters as a single string
+
+$# - it is set of number of arguments specified
+
+$1 -first argument
+
+$2 - second argument
+
+$0 - name of excuted command
+
+"$@" - each quoted string treated as a seperte argument
+
+$? - exit status of last command
+
+$$ - PID of the current shell
+
+$! - PID of the last background job
+
+------------------------------------------
+
+Count command line argumnts
+===============================
+if [$# -lt 1];then
+echo "program Usage is './scriptname.sh' options"
+else
+echo "program executed successfully"
+fi
+========================================
+Arithmetic operators
+
+-lt lessthan >
+-le less than or equal to =>
+-gt greater than or equal to <=
+-eq equal to =
+-ne no equal to !=
+
+echo -e "please provide one number: \c"
+read -r h
+echo -e "please provide one number: \c"
+read -r g
+
+test $h -lt $g;echo "$?"
+test $h -le $g;echo "$?"
+test $h -gt $g;echo "$?"
+test $h -ge $g;echo "$?"
+test $h -eq $g;echo "$?"
+test $h -ne $g;echo "$?"
+
+
+====================================
+logical operator
+
+multiple conditions
+
+AND (-a) (&&)  OR (-0) ||  NOT (-n) !
+
+===========================================
+Relational operators
+===================================
+if statement
+
+echo -e "please provide value below ten : \c"
+read -r value
+
+if [ $value -le 10];then
+echo "you provided value is $value"
+touch /tmp/test{1..100}.txt
+echo "Script completed"
+fi
+
+====================================
+
+if else statement
+
+
+echo -e "Enter any value >\c"
+read -r a
+echo -e "Enter any value: \c"
+read -r b
+
+if [ $a -gt $b ]; then
+echo "$a is greater than $b"
+else
+echo "$b is graeter than $a"
+fi
+
+---------------------------
+
+if else if statement
+if [ condition ]
+then
+elif [ condition1]
+then
+elif [ condition 2]
+then
+-------------------------------
+echo -e "please enter a values followed by space: \c"
+
+read -r a
+echo -e "please enter b values followed by space: \c"
+read -r b
+echo -e "please enter c values followed by space: \c"
+
+read -r c
+echo -e "please enter d values followed by space: \c"
+
+read -r d
+
+if [ $a -gt $b -a $a -gt $c -a $a -gt $d]; then
+echo "$a a is big"
+elif [ $b -gt $c -a $b -gt $d]; then
+echo "$b b is big"
+elif [$c -gt $d]; then
+echo "$c c is big"
+else
+echo "$d d is big"
+fi
+
+----------------------------------
+
+Nested if statement
+---------------------
+if [ condition ]; then
+,,,,,
+if [condition -2]; then
+........
+........
+else
+......
+......
+fi
+
+else
+.....
+.....
+fi
+------------------------------
+echo -e "please Enter Maths Marks: \c"
+read -r m
+echo -e "please Enter physics Marks: \c"
+read -r p
+echo -e "please Enter chemistry Marks: \c"
+read -r c
+
+if [ $m -ge 35 -a $p -ge 35 -a $c -ge 35]; then
+total=`expr $m + $p + $c`
+avg=`expr $total / 3`
+echo "Total Marks = $total"
+echo "Average Marks = $avg"
+        if [ $avg -ge 75 ]; then
+        echo "Congrats you got Distinction"
+        elif [ $avg -ge 60 -a $avg -lt 75 ];then
+        echo "Congrats you got First class"
+        elif [ $avg -ge 50 -a $avg -lt 60 ]; then
+        echo "you got second class"
+        elif [ $avg -ge 35 -a $avg -lt 50]; then
+        echo "you got third class"
+        fi
+else
+echo "sorry you failed"
+fi
+
+==========================================
+case statement
+
+======================================
+For loop
+
+vi hostfile ----> enter ip address
+
+for i in `cat hostfile`
+do
+ping -c 1 $i
+valid=`echo $?`
+if [ $valid -gt 1 ]; then
+echo " $i Host is not reachable"
+else
+echo "$i Host is up"
+fi
+done
+=========================================
+while loop
+
+echo -e "please provide one value: \c"
+read -r c
+i=1
+while [ $i -le 10 ]
+do
+b=`expr $c \* $i`
+
+echo "$c * $i = $b"
+i=`expr $i + 1`
+done
+=======================================
+
+Until loop
+
+echo -e "please enter the IP address to ping:\c"
+read -r ip
+until ping -c $ip
+do
+    echo "Host is still down"
+    sleep 1
+done
+
+echo "Host $ip is Up Now"
+
+=============================================
+
+FUNCTIONS
+
+function takebackup () {
+        if [ -f $1 ]; then
+        BACKUP="/home/psl/$(basename ${1}).$(date+%F).$$"
+        echo "Backing up $1 to ${BACKUP}"
+        cp $1 $BACKUP
+        fi
+}
+takebackup /etc/hosts
+        if [ $? -eq 0 ]; then
+        echo "BACKUP Success"
+        fi
+}
+function testing () {
+echo "Just Testing Function"
+}
+
+==============================================
+
+Arrays
+
+fruits=( "Apple" "Orange" "Banana" "sapota" )
+fruits[3]='Green Apple'
+for fruit in ${fruits[@]}
+do
+    echo "Fruit Name is $fruit"
+done
+
+echo "Number of Fruits in Bucket is" ${#fruits[@]}
+echo "All Fruits $(fruits[@])"
+==============================================
+Eval command
+
+COMMAND="ls -ltr /etc"
+echo "$COMMAND"    ----no output
+eval $COMMAND
+
+===========================================
+shift positional parameters
+
+LINE=`cat /etc/passwd |grep $1`
+IFS:
+set $LINE
+echo "Username is $1"
+echo "Password is $2"
+echo "UID = $3"
+echo "GID = $4" 
+
+
+
+
+

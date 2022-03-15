@@ -1,0 +1,1086 @@
+Ansible Automation
+-----------------
+adoc commands
+-------------
+ansible -m command -a "uptime" dev
+keyword module modulename os command target server grop
+
+-------------------------------------
+cat /etc/ansible/hosts
+
+ansible --list-hosts webserver   --list of server
+
+---------------------------------------
+Recap
+
+it is a free open source
+
+agent less- no need any agent installation
+python
+------------------------------
+cd /etc/amsible.cfg
+-----------------------------------
+
+
+section 2
+
+ansible components
+
+-----------------
+ansible configuration,host inventory,core modules,custom modules,playbooks
+
+connection plugin,plugins,
+
+------------------------------------------------
+control and manage node
+---------------
+ansible host inventories
+
+/etc/ansible/hosts
+
+[prod]
+client1
+client2
+client3
+[Dev]
+client4
+client5
+client6
+[test]
+client7
+client8
+client9:1234 qnsible_connection=ssh ansible_user=john
+[serverip]
+192.188.2.[0..100]
+---------------------------------------
+ansible --list-hosts all
+
+-----------------------
+
+ansible installation
+
+useradd ansible
+passwd ansible
+
+ssh client -1 -----> checking ssh client
+
+su ansible
+
+ssh-keygen -r rsa
+
+scp -p id_rsa.pub client1:/home/ansible/.ssh/authorized_keys
+
+--------------------------------------------
+creating inventory file
+
+sudo su
+
+vi /etc/ansible/hosts
+chmod 777 /etc/ansible/hosts
+
+[dev]
+
+ansible -m command -a "uptime" dev
+
+ansible -m command 
+
+ansible -m command -a "vgs" dev --become -K ----root user access
+
+====================================================
+customozing ansible 
+
+/etc/ansible/ansible.cfg
+
+privallage esclation
+--------
+become=true
+become_method=sudo
+become_user=root
+become_ask_pass=true
+
+/etc/ansible/ansible.cfg
+
+privallage esclation  ---> permanent position
+
+---------------------
+
+lab section
+
+/etc/ansible/ansible.cfg
+privallage esclation
+
+ansible --list-hosts dev
+
+ansible -m command -a "uptime" dev
+
+cat /etc/group | grep -i admin
+
+ansible -m file -a "dest=/tmp/abc mode=777 owner=root group admin" dev --become --become-method=sudo --become-user=root -k  ---asking password
+
+-K  ---->asking password
+
+============================================
+Running adhoc commands
+-------------------------
+lab-1
+
+cat /etc/ansible/hosts
+
+
+   ansible --list-hosts <groupname>
+
+ansible -m command -a "uptime" testing
+ansible -m command -a "uname -r" testing
+
+ansible -m ping testing
+
+ansible -m copy -a "src=/etc/hosts dest=/tmp/hosts" testing
+
+ansible -m copy -a "src=/etc/hosts dest=/tmp/hosts" testing --become -K
+
+---------------------------------
+file
+-----
+
+ansible -m copy -a "src=/etc/hosts dest=/tmp/hosts" testing
+
+creating new users in 3 servers
+
+ansible -m file -a "dest:/tmp/hosts_testing mode=777 owner=unixadmin" --beccome -K
+testing
+
+cat /etc/hosts
+
+ansible -m file -a "dest=/tmp/hosts_testing state-absent" --become -K testing
+
+----------------------------------------------
+copy
+
+ansible -m copy -a "content="managed by ansible\n" dest=/tmp/praticse" testing --become -k
+
+------------------------------------------------
+command & shell module
+
+The command module allows administrators to quickly execute remote commands on managed hosts.These commads are not processed by the shekk on the managed hots
+
+ansible locslhost -m command -a set ---error
+
+ansible localhost -m shell -a set ---working
+
+implementing playbook
+----------------------
+
+---
+- hosts:dev
+  become:true
+  become_user:root
+  tasks:
+   - name: run the script
+     script:/home/sverma/ansible/scr.sh
+     when:ansible_distribution == "Redhat" and ansible_distribution_major_version =='7'
+---------------------------------------------------------------
+
+---
+- hosts: all
+  become: true
+  become_user: root
+  tasks:
+   - name: state vfsdpd service
+     service
+       name: vfpds
+       state: started
+-----------------------------------------
+ansible -playbook service.yml -k
+
+ ------------------------------------
+copy
+
+---
+- hosts: all
+  become: true
+  become_user: root
+  task:
+   - name : copy the file
+     copy:
+       src: /tmp/abcd
+       dest: /tmp
+       owner: unixadm
+       group: root
+       mode: 0777
+ansible-playbook copyfily.yml -k
+---------------------------------------------
+  copy file with condition
+
+  ---
+- hosts: all
+  become: true
+  become_user: root
+  task:
+   - name : copy the file
+     copy:
+       src: /tmp/abcd1
+       dest: /tmp
+       owner: unixadm
+       group: root
+       mode: 0777
+      when: ansible_distribution == "REDHAT" and ansible_distribution_major_version =='7'
+-------------------
+ansible -m command -a "cat /etc/redhat-release" all
+----------------------------------------
+
+Introduction to modules
+------------------------
+500 modules
+ 3 types
+core modules
+extras modules
+custome modules
+-----------------------
+# library =/usr/share/my_modules
+-------------------------------
+cloud  pacakaging utilities clustering network 
+files source control webinfrasture inventory commands  notifications system windows messaging database monitoring
+docs.ansible.com
+
+ansible-doc yum
+
+--------------------
+
+lab modules
+
+install tree 
+
+rpm -qa | grep -iw tree
+
+ansible -m yum -a "name=tree state=present" --become -K prod
+
+ansible -m service -a "name=httpd state=started" --become -K prod
+
+-----------------------------
+playbook
+
+shell:echo "nameserver 192.0.2.1"> /etc/resolv.conf
+
+copy:
+  dest:/etc/resolv.cnf
+  conten:"name server 192.0.0.1\n"
+  -------------------------------------------
+Lab for ideompedant of lab server
+
+playbook
+
+non-ideomptance
+
+---
+- hosts: webserver
+  become: true
+  become_user: root
+  tasks:
+      - name: non-idempotent approach with shell modules
+        shell: echo " nameserver 192.168.0.1" >/tmp/resolve.conf
+
+---------------------------------------------------
+ideompotent
+
+---
+- hosts: webserver
+  become: true
+  become_user: root
+  tasks:
+      - name: idempotent approach with shell modules
+        copy:
+           dest: /tmp/resolv.cnf
+           content: "name server 192.168.0.1"
+--------------------------------------------------
+multiple tasks in playbook
+
+1. mount os media drive
+2. create local repsoitory
+3. install required packages
+4.enable the service
+-----------------------------
+---
+- hosts; all
+  become: true
+  become_user: root
+  tasks:
+     - name: mount the os media drive
+       command: mount /dev/sro/mnt
+     - name: copy the local repo file
+       copy:
+         src: /home/sverma/ansible/server.repo
+         dest: /etc/rum.repo.s
+     - name: installed the usftpd package
+       yum:
+          name: vsftpd
+          state: latest
+     - name: start * enable service
+       srvice:
+           name: vsfdb
+           state: started
+           enable: true
+    - name: start & enable httpd service
+      service:
+           name: httpd
+           state: started
+           enabled: true
+--------------------------------------------
+rpm -qa | grep -i httpd
+
+---------------------------------------------
+
+multi task -1
+
+----------------------------------
+syntax verification & dry check for ansible playbook
+--------------------------------------------------------
+excute a dry run
+ansible-playbook -C webserver.yml
+
+ansible-playbook --syntax-check name.yml
+
+step by step
+
+ansible-playbook --step task.yml -k -c
+
+------------------------------------
+appache webserver installation -1
+
+install latest package of https
+ start and enable the httpd service
+ install latest package of firewalld
+start & enable firewalld service
+permit http service at firewall
+create simple html webpage
+defining webserver name i.e. www.client.example.com
+update its entry in /etc/host file
+
+installation 2
+
+---
+- hosts: all
+  become: true
+  become_user: root
+  tasks:
+  - name: install latest package of httpd
+    yum:
+       name: httpd
+       state: latest
+  - name: start & Enable the http service
+    service:
+        name: httpd
+        enabled: true
+        state: started
+  - name: install latest package of firewalld
+    yum:
+         name: firewalld
+         state: latest
+  - name: start & Enable the firewalld service
+    service:
+        name: firewalld
+        enable: true
+        state: started
+  - name : permit http service
+    firewalld:
+       service:  http
+       permanent: true
+       state: enabled
+       immediate: yes
+  - name: create simple html web page
+    copy:
+       content: "welcome to the ansible Learning course Module\n"
+       dest: /var/www/html/index.html
+  - name: defining web server name
+    lineinfile:
+       path: /etc/httpd/conf/httpd.conf
+       line: servername www.client1.example.com:80
+       insertafter: "#servername"
+  - name: update its entry in /etc/hosts
+    lineinfile:
+        path: /etc/hosts
+        line: 192.168.43.139 www.client1.example.com
+
+--------------------------------------------------------
+web server installation 3
+ansible-playbook --syntax-check web.yml
+rpm -qa | grep -i httpd
+
+firewall-cmd --zone=public --list-all
+
+================================================
+Managing varaiables in ansible
+
+host and group variables
+
+/etc/ansible/ansible.cfg
+
+-------------------------
+lab on local variable and host variable
+
+---------------------------------
+variables
+
+-----------
+
+---
+- hosts: webserver
+  become: true
+  become_user: root
+  vars:
+       remote_dir: /etc/ansible/facts.d
+       facts_file: cutom.fact
+  tasks:
+          - name: create a remote directory
+            file:
+                    state: directory
+                    recurse: yes
+                    path: ""{{remote_dir}}""
+          - name: copy a file
+            copy:
+                    src:"{{ facts_file }}"
+                    dest: "{{ remote_dir }}"
+
+ansible-playbook --syntax-check lab7.yml --step -K
+
+------------------------------------------------------------
+ansible facts
+--------------
+
+ex: hostname - {{ansible_hostname}}
+main IPV4 address based on routing {{ansible_default_ipv4.address}}
+
+main disk first partition size {{ansible_devices_vda.partitions.vda1.size}}
+
+DNS server: {{ansible_dns.nameservers}}
+
+kernel version {{ansible_kernel}}
+
+ansible clent1 -m setup -a "filter=ansible_fqdn"
+
+-------------------------------------------
+================================================
+Implementing tasks control in ansible
+---------------------------------------
+conditions in ansible
+
+when statement
+
+ex
+
+tasks:
+   - name: "shut down Debian flavored systems"
+     command: /sbin/shutdown -t now
+     when: ansible_os_family == "Debian"
+-----------------------------------------------
+ex:
+
+---
+- hosts: all
+  become: true
+  become_user: root
+  tasks:
+        - name: shutdown centos system
+          command: poweroff
+          when: ansible_os_family == "debian"
+          when: (ansible_os_family == "Redhat" and ansible_distribution_major_version == "6") or(ansible_os_family == "centos" and ansible_distribution_major_version == "7") 
+
+--------------------------------------------------------------
+ansible-m setup -a "filter=ansible_os_family" prod
+
+-----------------------------------------------------------
+ansible loops - when,when_items etc
+
+ex:
+host: prod
+task:
+     - name: ansible loop
+       debug:
+             msg: "{{ item }}"
+       with_items:
+               - "hello1"
+               - "hello2"
+               - "hello3"
+       when: ansible_os_family == "centos" and ansible_distribution_major_version =="7"
+--------------------------------------------------------
+     loops in ansible
+
+ - yum:
+   name: pstfix
+   state: latest
+ - yum:
+   name: dovecot
+   state: latest
+------------------------------
+vars:
+mail_services:
+ - postfix
+ - dovecot
+tasks:
+ - yum:
+   name: "{{item}}"
+   state: latest
+  with_items: "{{mail_services}}"
+-------------------------------------------
+
+- users:
+   name: "{{item.name}}"
+   state: present
+   groups: "{{item.groups}}"
+  with_items:
+   -{name:'jane',groups:'wheel'}
+
+---------------------------------------------------
+Ansible handlers
+
+tasks:
+- name: copy demo.example.conf configuration template
+  copy:
+    src:/var/lib/templates/demo.example.conf.template
+    dest: /etc/httpd/conf.d/demo.example.conf
+  notify:
+   - restart_mysql
+   - restart_apache
+handlers:
+- name: restart_mysql
+  service:
+    name: mariadb
+    state: restarted
+- name: restart_apache
+  services:
+    name: httpd
+    state: restarted
+--------------------------------------------------------
+ex:
+---
+- hosts: prod
+  become: true
+  become_user: root
+  tasks:
+     - name: Mount the os media drive
+       command: mount /dev/sr0 /mnt
+     - name: Copy the local repo file
+       copy:
+             src: /home/sverma/ansible/server.repo
+             dest: /etc/yum.repos.d
+     - name: installing multiple packages
+       yum:
+             name: "{{ item }}"
+             state: latest
+       with_Items:
+               - vsftpd
+               - httpd
+               - postfix
+               - dovecot
+     - name: start & Enable VSFTPD service
+       service:
+              name : httpd
+              stste: started
+              enabled: true
+     - name: create web content
+       copy:
+             src: /home/sverma/roles/myvhost/files/html
+             dest: /var/www/vhosts/{{ ansible_hostname }}    
+       notify:
+             - restart_httpd
+# handelrs for restarting httpd
+       handlers:
+         - name: restart_httpd
+           service:
+                   name: httpd
+                   start: restarted
+-----------------------------------------------
+==================================================
+Ansible roles
+-------------------
+create ansible roles
+
+install role
+-------------
+ansible galaxy init /etc/ansible/roles/appache--offline
+
+cd /etc/ansible/roles
+ ls -ltr
+  templates,files,vvars,meta,handlers,tests,tasks,defaults
+
+ -------------------------------------------------------------------------------
+
+ex: lab -1
+
+create a role for appache webserver
+---
+- hosts: all
+  tasks:
+   - name: install httpd package
+     yum : name=httpd state=latest
+   - name: copy httpd configuration file
+     copy: src=/data/httpd.original dest=/etc/httpd/conf/httpd.conf
+   - name: copy index.html
+     copy: src=/data/index.html dest=/var/www/html
+     notify:
+     - restart apache
+   - name: start and enable httpd service
+     service: name=httpd state=restarted enabled=yes
+    handlers:
+    - name: restart apache
+      service: name=httpd state=restarted
+----------------------------
+roles:
+
+ansible-galaxy init /etc/ansible/roles/apache --offline
+
+cd tasks: main.yml
+
+- import_tasks: install.yml
+- impoprt_tasks: cofig.yml 
+- import_tasks: service.yml
+vi install.yml
+---
+- namer: installation of httpd package
+  yum :name-httpd state=latest
+ 
+configure.yml
+
+---
+- name: copy index.html
+  copy: src=files/index.html dest=/var/www/html
+  notify:
+   - restart apache
+----------------------------
+files
+
+index.html
+
+vi service.yml
+---
+- name: start and enable HTTPD service
+  service: name=httpd state=restarted enabled=yes
+cd handlers
+--------------
+main.yml
+- name: restart apache
+  service: name=httpd state=restarted
+
+------------------------meta
+cd meta
+------------
+lab-2
+
+playbook
+--------
+---
+-hosts: myweb
+ become: true
+ become_user: root
+ roles:
+  - apache
+
+--------------------------
+=====================================================
+INDUSTRIAL PROJECT-PATACHING ON LINUX SERVERS
+-----------------------------------------------
+overview about patching on linux server
+--------------------------------------------
+patching
+--------
+automate the linux patching server
+
+* verify the application/database process are running or not
+*decision point to start patching
+*copy the required repo file to managd host
+kenal,network,
+* upgrade the kernal pr package
+*check if reboot is required after kernal update
+*reboot the system
+* wait for few minutes so that server should come up after reboot
+*Debug a message with new kernal version
+---------------------------------------------------
+verify the application/database process are running
+-----------------------------------------------------
+ansible --list-hosts patching
+
+ps -eaf | grep -i httpd
+systemctl stop httpd
+ps -eaf | grep -i httpd
+ps -eaf | grep -i httpd | grep -v grep
+ex:
+
+hosts: patching
+become:true
+become_user: roor
+tasks:
+     - name: verify app/database are running or not  
+       shell: if ps -eaf | egrep 'httpd' | grep -v grep > /dev/null; then echo 'process running';else echo 'process_not_running';fi
+       ignore_errors: true
+       register: appr_proc_check
+      - debug: msg="{{ appr_proc_check.stdout }}" 
+-----------------------------------
+ansible-playbook --syntax-check patching.yml
+--------------------------------------------
+patching using ansible
+----------------------
+decison point
+----------------
+hosts: patching
+become:true
+become_user: root
+tasks:
+     - name: verify app/database are running or not  
+       shell: if ps -eaf | egrep 'httpd' | grep -v grep > /dev/null; then echo 'process running';else echo 'process_not_running';fi
+       ignore_errors: true
+       register: appr_proc_check
+      - debug: msg="{{ appr_proc_check.stdout }}" 
+      - name: decison point to starting
+        fail:
+             msg= "{{inventory_hostname}} having running application,please stop first and then attempt patching""
+        when: appr_proc_check.std.out == "process_running"
+---------------------------------------------------------
+lab:3 --> copy the required repo file to the managed host
+
+create file kernal.repo
+
+hosts: patching
+become:true
+become_user: root
+tasks:
+     - name: verify app/database are running or not  
+       shell: if ps -eaf | egrep 'httpd' | grep -v grep > /dev/null; then echo 'process running';else echo 'process_not_running';fi
+       ignore_errors: true
+       register: appr_proc_check
+      - debug: msg="{{ appr_proc_check.stdout }}" 
+      - name: decison point to starting
+        fail:
+             msg= "{{inventory_hostname}} having running application,please stop first and then attempt patching""
+        when: appr_proc_check.std.out == "process_running"
+
+      - name: copy the kernel patch repo file
+        copy:
+               src: /home/sverma/patching
+               dest: /etc/yum.repos.d/
+---------------------------------------------------
+lab-4 update the kernal or packages
+
+hosts: patching
+become:true
+become_user: root
+tasks:
+     - name: verify app/database are running or not  
+       shell: if ps -eaf | egrep 'httpd' | grep -v grep > /dev/null; then echo 'process running';else echo 'process_not_running';fi
+       ignore_errors: true
+       register: appr_proc_check
+      - debug: msg="{{ appr_proc_check.stdout }}" 
+      - name: decison point to starting
+        fail:
+             msg= "{{inventory_hostname}} having running application,please stop first and then attempt patching""
+        when: appr_proc_check.std.out == "process_running"
+
+      - name: copy the kernel patch repo file
+        copy:
+               src: /home/sverma/patching
+               dest: /etc/yum.repos.d/
+      - name: current kernal version
+        shell: uname -r
+        register: curr_ker
+      - name: initaiting patching
+        yum:
+              name= kernel
+              state= latest
+        register: yum_update
+      - debug: msg="kernel has been updated"
+        when: yum_update.rc == 0
+---------------------------------------------
+remaining tasks
+shell script
+
+rpm -qa --last kernel
+uname -r
+rpm -qa --last kernel | head -1
+rpm -qa --last kernel | head -1 | awk '{ print $1 }' | sed 's/kernel-//g'
+-------------------
+
+hosts: patching
+become:true
+become_user: root
+tasks:
+     - name: verify app/database are running or not  
+       shell: if ps -eaf | egrep 'httpd' | grep -v grep > /dev/null; then echo 'process running';else echo 'process_not_running';fi
+       ignore_errors: true
+       register: appr_proc_check
+      - debug: msg="{{ appr_proc_check.stdout }}" 
+      - name: decison point to starting
+        fail:
+             msg= "{{inventory_hostname}} having running application,please stop first and then attempt patching""
+        when: appr_proc_check.std.out == "process_running"
+
+      - name: copy the kernel patch repo file
+        copy:
+               src: /home/sverma/patching
+               dest: /etc/yum.repos.d/
+      - name: current kernal version
+        shell: uname -r
+        register: curr_ker
+      - name: initaiting patching
+        yum:
+              name= kernel
+              state= latest
+        register: yum_update
+      - debug: msg="kernel has been updated"
+        when: yum_update.rc == 0
+      - name: check if rebbot is required or not
+        shell- kernel_new=$(rpm -qa --last kernel | head -1 | awk '{print $1}' | sed 's/kernel-//g'); kernel_now=$(uname -r); if [[ $kernel_new != $kernel_now]]; then echo "reboot is required";else echo "reboot is not required"; fi
+        ignore_error: true
+        register: reboot_check
+      - debug: msg="{{ reboot_check.studout}}"
+        # reboot
+      - name: rebooting after patching
+        command: reboot
+         when: reboot_check.studout == "reboot is required"
+        # reboot the system
+      - name: reboot the system after patching
+        shell: "shutdown -r y now"
+        async:1
+        poll: 0
+      - name: wait the sysytem to come up
+        pause:
+                minutes:1
+      - name: New kernel version
+        shell: uname -r
+        register: new_ker
+      - debug: msg="New kernel version is {{new_ker.stdout}}" and old kernel version was {{ curr_ker.stdout }}"
+        # 
+-------------------------------------------------------
+========================================================
+INDUSTRIAL PROJECT -STOP/START CONTROL MANAGEMENT
+-----------------------------------------------------
+Lec -1
+
+stop playbook (ctm_stop.sh,aptm_dev_DB_stop.sh,Agents_stop.sh)
+
+start playbook (pem_maint.sh start,aptm_devHA_DB_ start.sh & Active_Agents_start.sh)
+-----------------------------------------------------
+ex:
+
+---
+- host: myweb
+  become: true
+  become_user : root
+  become_method: sudo
+  tasks:
+   - name: stopping the control M appl (ctm_stop.sh)
+     shell: /opt/aptm/ctm_stop.sh > /tmp/out2 2>&1; cat /tmp/out2|grep -iw 'failed' > /dev/null; if [ $? ==0 ]; then echo 'Appistopfailed'; else echo 'Appistopped'; fi'
+     register: appr_check
+   - debug: msg "CTM" app1 stopped successfully"
+     when: appr_check.rc == 0
+   - name: Log message for control M Appi
+     command: cat /tmp/out2
+     register: logmsg
+   - debug: msg "{{ logmsg.stdout_lines }}"
+     
+--------------------------------------------
+
+tasks:
+   - name: stopping the control M appl (ctm_stop.sh)
+     shell: /opt/aptm/ctm_stop.sh > /tmp/out2 2>&1; cat /tmp/out2|grep -iw 'failed' > /dev/null; if [ $? ==0 ]; then echo 'Appistopfailed'; else echo 'Appistopped'; fi'
+     register: appr_check
+   - debug: msg "CTM" app1 stopped successfully"
+     when: appr_check.stdout == "Appistopped"
+   - debug: msg="CTM App1 stop has been failed"
+   - when: appr_check.stdout == "Appistopfailed"
+   - name: Log message for control M Appi
+     command: cat /tmp/out2
+     register: logmsg
+   - debug: msg "{{ logmsg.stdout_lines }}"
+
+   - name: wait for 10 seconds
+     wait_for: timeout=10
+   - name: stopping APTM DB (aptm_dev_DB_stop.sh)
+     shell: /opt/aptm/aptm_dev_DB_stop.sh > /tmp/out3 2>&1; cat /tmp/out3/grep -iw 'failed; >/dev/null; if [ $? == 0]; then echo 'dbstoppedfailed'; else echo 'dbstopped'; fi]
+     when: appr_check.std.out == "Applstopped"
+     register: db_status_check
+   - debug: mag="APTM DB stopped Failed"
+     when: db_status_check.std.out == "dbstoppedfailed"
+   - name: Log message for APTM DB stopped
+     command: cat /tmp/out3
+     register: logmsg1
+   - debug: msg="{{ logmsg1.stdout_line }}"
+   - debug: msg="APTM DB has been stopped successfullt"
+     when dc_status_check.stdout == "dbstopped"
+   - name: wait 10 min
+     wait 
+
+--------------------------------------------------
+
+       
+----------------------------------------------------
+====================================================
+creating automation tool using shell and ansible
+-------------------------------------------------------
+user administration tasks to admin
+
+user creation
+user removal
+group add
+password reset
+user administration
+user entry in sudoers file
+user details like last login and group name
+exit
+
+Run adhoc commands
+
+-----------------------------------------
+health checks
+
+memory utilization
+cpu utilization
+overall I/O activities
+Reports run queue and load average on the server and many more
+Top cpu consuming process
+top memory consuming statis
+capturing performance statics
+packets capturing using tcpdump
+exit
+------------------------------------------
+shell scripting
+
+if ..else elif statement
+
+loops
+sed-stream editot
+awl
+the case esac statement
+
+-----------------------------
+while true
+ do
+ echo "please select choice from below menu"
+ echo "1. pre-validation"
+ echo "2. user administartion"
+ echo" 3. Run AD hoc commands"
+ echo " 0.exit"
+ read cho
+ case $cho in
+ 0)
+break
+;;
+1)
+ echo "welcome to pre-validation"
+;;
+2)
+echo "welcome to user administration'
+;;
+3)
+echo "welcome to AD Hoc commands'
+;;
+esac
+done
+-------------------------------------
+lab session in on case ststement
+
+ ---------------------------------------
+design of front look in tool'
+--------------------------------------
+Healing and selecting target servers
+
+try="yes"
+target="None"
+my_head()
+{
+
+echo -e $BIGREEN"------------------------------------
+---------------------"
+          echo -e "Automation tool to automate day to day unix tasks !!\c"
+          echo -e "\tTrail=$try \c"
+          echo -e "\tTarget servers: $target"
+          echo -e "----------------------------------------"$NORMAL
+}
+
+while true
+do
+  my_head
+---------------------------------------------------
+select target servers and Automation tool
+
+-----------------------------------------------
+user creation using ansible & shell scripting
+
+useradd -U <uid> -m -d /home/accounts/steve -G accounts -c "oracle DB" -s "/bin/bash" user name
+
+ex: playbook
+
+---
+- hosts: myprod
+  become: true
+  become_user: root
+  vars:
+    password: test123
+    userid: 1022
+    sgrp: choice
+    comments: orcal db team
+    username: vinod
+    pgrp: oradb
+    hme:
+  tasks:
+   - name: user exit
+     shell: id{{ username }}
+     register: user_exist
+     ignore_errors: yes
+   - debug: msg ="User Name {{username}} is already existing on {{ansible_hostname}}"
+     when: user_exist.rc == 0
+   - name: User creation
+     user: name={{username}} uid={{userid}} home={{hme}} comment={{ comments }} password={{password}} group ={{pgrp}} groups={{sgrp}} append=yes
+     when: user_exists.rc ! = 0
+     register: user creation
+   - debug: msg="UserName {{ username }} has been created on {{ansible_hostname}}"
+     when: usercreation.changed
+
+
+
+
+---------------------------------------------------------
+using removal of automation
+--------------------------------
+ex;
+---
+- hosts: abcz
+  become: true
+  become_use: root
+  tasks: 
+   - name: user Removal Tasks
+     user: name=username state=absent remove=yes
+     register: userremoval
+   - debug: msg="user username has been removed from {{ansible_hostname}}"
+     when: userremoval.changed
+   - debug: var  userremoval
+--------------------
+#!/bin/bash
+
+echo -e "please enter the user name"
+read user
+cat usernew.yml | sed "s/username/$user/g" > usercrl.yml
+ansible-playbook usercrl.yml -K
+sleep 10
+-----------------------------------------------
+
+password reset using automation
+
+---
+- hosts: abcz
+  become: true
+  become_user: root
+  vars:
+     password: psw
+     userid: usrid
+     username: username
+  tasks:
+    - name: user exist
+      shell: id {{ username }}
+      register: user_exist
+      ignore_error: yes
+    - debug: msg="user Name {{user name}} is not existing on {{ansible_hostname}}"
+      when: user_exist.rc !=0
+    - name: password Reset
+      user: name={{ user name}} update_passwor=always password={{password}}
+      when: user_exist.rc == 0
+      register: usercreation
+    - debug: msg="password has been reset for user {{username}} on {{ansible_hostname}}"
+      when: usercreation.changed

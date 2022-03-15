@@ -1,0 +1,21 @@
+mkdir tmp_misp
+# stop all containers
+sudo docker container stop $(sudo docker container ls -aq)
+# remove all containers
+sudo docker container rm $(sudo docker ps -a -q)
+# remove all images
+sudo docker rmi -f $(sudo docker images -a -q)
+# remove all volumes
+sudo docker system prune -af --volumes
+
+cd ./tmp_misp
+git clone https://github.com/coolacid/docker-misp.git
+cd docker-misp 
+sudo docker-compose up -d
+sleep 5m
+sudo docker exec -it docker-misp_misp_1 bash -c  "sudo -u www-data /var/www/MISP/app/Console/cake Password admin@admin.test Password1234"
+sudo docker image save $(sudo docker image ls | grep coolacid | grep modules-latest | awk '{print $3}') -o modules-latest.tar
+sudo docker image save $(sudo docker image ls | grep coolacid | grep core-latest | awk '{print $3}') -o core-latest.tar
+sudo docker image save $(sudo docker image ls | grep namshi\/smtp | awk '{print $3}') -o smtp.tar 
+sudo docker image save $(sudo docker image ls | grep redis | awk '{print $3}') -o redis.tar  
+

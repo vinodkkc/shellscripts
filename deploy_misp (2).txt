@@ -1,0 +1,54 @@
+if [ $# -lt 3 ]; then 
+    echo "Usage : ./deploy.sh <MISP Bundle> <target_dir> <server ip>" $#
+    exit 
+fi
+ROOTDIR=$PWD
+
+MISPDIR=$2
+
+if [ -d "$MISPDIR" ]; then
+    echo "removing existing installation directory"
+    sudo rm -rf $MISPDIR 
+fi
+
+mkdir $MISPDIR
+
+echo "Installing MISP in " $2 "..."
+
+sudo tar -xvzf $1 -C $MISPDIR
+
+cd $MISPDIR
+
+# stop all containers
+sudo docker container stop $(sudo docker container ls -aq)
+# remove all containers
+sudo docker container rm $(sudo docker ps -a -q)
+# remove all images
+sudo docker rmi -f $(sudo docker images -a -q)
+# remove all volumes
+sudo docker volume rm $(sudo docker volume ls -q)
+
+
+#sudo docker system prune -af --volumes
+
+sudo docker image load -i core-latest.tar
+sudo docker image load -i modules-latest.tar
+sudo docker image load -i redis.tar
+sudo docker image load -i smtp.tar
+sudo docker image load -i mysql.tar
+
+sudo docker-compose up -d
+sleep 5m
+
+MISPCONTAINERID="$(sudo docker ps | grep _misp_1 | awk '{print $1}')"
+
+
+sudo docker exec -it $MISPCONTAINERID bash -c  "sudo -u www-data /var/www/MISP/app/Console/cake live 1"
+sudo docker exec -it $MISPCONTAINERID bash -c  "sudo -u www-data /var/www/MISP/app/Console/cake Baseurl https://$3"
+sudo docker exec -it $MISPCONTAINERID bash -c  "sudo -u www-data cp -f /var/www/MISP/app/files/scripts/synonymsToTagNames.json /var/www/MISP/app/files/scripts/tmp/"
+sudo docker cp ../local_changes/stix2misp.py $MISPCONTAINERID:/var/www/MISP/app/files/scripts/stix2/
+
+cd $ROOTDIR
+sleep 3m
+
+echo "MISP instance now running at https://$3 "

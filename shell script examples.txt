@@ -1,0 +1,96 @@
+shell script examples
+======================
+1. creating a directory
+
+echo "Enter directory name"
+read dirname
+
+if [ ! -d "$dirname" ]
+then
+    echo "File doesn't exist. Creating now"
+    mkdir ./$dirname
+    echo "File created"
+else
+    echo "File exists"
+fi
+--------------------------------
+read -p "Enter Directory Name: " dirname
+if [[ ! -d "$dirname" ]]
+then
+        if [[ ! -L $dirname ]]
+        then
+                echo "Directory doesn't exist. Creating now"
+                mkdir $dirname
+                echo "Directory created"
+        else
+                echo "Directory exists"
+        fi
+fi    
+=============================================
+delete old dir and create new one
+
+#!/bin/bash
+
+echo "deleting old directories `find . -type d -name "new*" -exec sudo rm -d {} \;
+
+echo "please enter your directory name:"
+
+read -r dirname
+
+if [ ! -d "$dirname" ]; then
+echo "directory not exists .creating new one"
+mkdir $dirname
+echo "directory created !!!"
+else
+echo "directory file exists "
+fi
+---------------------------------------------
+File system backup and delete old files
+
+touch -d "Mon 1 Mar 2020 12:30:00" marchfile  ----date wise creation file
+
+ delete oldfile.sh
+
+#!/bin/bash
+ 
+find /root/scripts/ -mtime +90 -exec rm {} \;
+
+
+Renaming
+--------
+find /root/scripts/ -mtime +90 -exec mv {} {}.old \;
+
+backup the file system
+-----------------------
+#!/bin/bash
+tar -cvf /tmp/backup.tar /etc/ /var/
+gzip /tmp/backup.tar
+find /tmp/backup.tar.gz -mtime -1 -type f -ptint &> /dev/null
+if [ $? -eq 0 ]
+then
+echo "backup was created"
+echo
+echo "archieving backup"
+scp /tmp/backup.tar.gz root@ip:/path
+else
+echo "backup failed"
+fi
+-------------------------------------------------
+Linux basic admin tasks
+
+top
+
+#!/bin/bash
+
+
+top
+df -h
+free -m
+uptime
+iostat
+---------------------------
+
+
+
+
+

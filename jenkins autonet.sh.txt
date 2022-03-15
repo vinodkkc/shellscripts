@@ -1,0 +1,170 @@
+auto net.sh-------jenkins access to mirrortune error
+
+
+#!/bin/bash
+
+echo "----------------------------------"
+echo    "Script for Internet access"
+echo "----------------------------------"
+echo
+echo "Please enter your credentials: "
+echo
+echo -n "Username (Name_Surname): "
+
+read username
+
+echo -n "Password: "
+
+read -s password
+echo
+echo "For HJ,PT,NG and BR locations select 1 "
+echo "For BG,GOA,BLR,HYD locations select 2 "
+echo
+read -p "Please enter the number: " mnum
+while :
+do
+case $mnum in
+
+        1)
+
+        echo
+        echo "1) For Hinjawdi Location press 1 "
+        echo "2) For Pune Location press 2 "
+        echo "3) For Nagpur Location press 3 "
+        echo "4) For Blue Ridge Location press 4 "
+        echo
+        read -p "Please enter Work location : " snum
+        echo "----------------------------------"
+
+        while :
+        do
+        case $snum in
+
+                1)
+                echo Hinjawdi Location
+                echo
+
+                curl -Lk "https://10.44.254.206:6082/php/uid.php?vsys=1&url=https://hjcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Host: 10.44.254.206:6082"  -H "Referer: https://10.44.254.206:6082/php/uid.php?vsys=1&url=https://hjcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Connection: keep-alive" --data "inputStr=&escapeUser=$username&user=$username&passwd=$password&ok=Login" &> /dev/null
+                break
+                ;;
+
+                2)
+                echo Pune Location
+                echo
+
+                curl -Lk "https://10.77.254.236:6082/php/uid.php?vsys=1&url=https://ptcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Host: 10.77.254.236:6082"  -H "Referer: https://10.77.254.236:6082/php/uid.php?vsys=1&url=https://ptcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Connection: keep-alive" --data "inputStr=&escapeUser=$username&user=$username&passwd=$password&ok=Login" &> /dev/null
+                break
+                ;;
+
+                3)
+                echo Nagpur Location
+                echo
+
+                curl -Lk "https://10.222.253.254:6082/php/uid.php?vsys=1&url=https://ngcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Host: 10.222.253.254:6082"  -H "Referer: https://10.222.253.254:6082/php/uid.php?vsys=1&url=https://ngcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Connection: keep-alive" --data "inputStr=&escapeUser=$username&user=$username&passwd=$password&ok=Login" &> /dev/null
+                break
+                ;;
+
+                4)
+                echo Blue Ridge Location
+                echo
+                curl -Lk "https://10.55.254.254:6082/php/uid.php?vsys=1&url=https://brcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Host: 10.55.254.254:6082" -H "Referer: https://10.55.254.254:6082/php/uid.php?vsys=1&url=https://brcpportal.persistent.com:6082/php/uid.php?vsys=1&rule=0&url"%"2f" -H "Connection: keep-alive" --data "inputStr=&escapeUser=$username&user=$username&passwd=$password&ok=Login"
+                break
+                ;;
+                *)
+                echo "Please select 1 to 4 only"
+                break
+                ;;
+        esac
+        done
+
+break
+;;
+        2)
+
+        echo
+        echo "----------------------------------"
+        echo
+        echo "1) For BG Location press 1 "
+        echo "2) For GOA Location press 2 "
+        echo "3) For BLR Location Press 3 "
+        echo "4) For HYD Location Press 4 "
+        echo
+        read -p "Enter Work location : " pnum
+        echo "----------------------------------"
+
+                #echo "Enter your credentials: "
+                #read -p "Enter Your Name: "  name
+                #read -p "Enter your Surname: " surnm
+                #echo -n "Enter your Password: "
+                #read -s password
+                echo $http_proxy >> /opt/proxy_old.txt
+                echo $https_proxy >> /opt/proxy_old.txt
+                unset http_proxy
+                unset https_proxy
+
+        pass=$(echo $password | sed -r 's/[!]+/%21/g' | sed -r 's/[#]+/%23/g' | sed -r 's/[$]+/%24/g' | sed -r 's/[&]+/%26/g' | sed -r 's/[(]+/%28/g' | sed -r 's/[)]+/%29/g' | sed -r 's/[*]+/%2A/g'  | sed -r 's/[+]+/%B/g'  | sed -r 's/[,]+/%2C/g'  | sed -r 's/[/]+/%2F/g' | sed -r 's/[:]+/%3B/g'  | sed -r 's/[;]+/%3B/g'  | sed -r 's/[=]+/%3D/g' |  sed -r 's/[?]+/%3F/g' | sed -r 's/[@]+/%40/g' | sed -r 's/[[]+/%5B/g' | sed -r 's/[]]+/%5D/g')
+
+                while :
+                do
+                case $pnum in
+
+                1)
+                echo BG Location
+                echo export http_proxy=http://"$username":"$pass"@10.43.2.54:8080
+                echo export https_proxy=https://"$username":"$pass"@10.43.2.54:8080
+                break
+                ;;
+
+                2)
+                echo GOA Location
+                echo export http_proxy=http://"$username":"$pass"@10.244.0.10:8080
+                echo export https_proxy=https://"$username":"$pass"@10.244.0.10:8080
+                break
+                ;;
+                3)
+                echo BLR Location
+                echo export http_proxy=http://"$username":"$pass"@10.43.7.41:8080
+                echo export https_proxy=https://"$username":"$pass"@10.43.7.41:8080
+                break
+                ;;
+                4)
+                echo HYD Location
+                echo export http_proxy=http://"$username":"$pass"@10.233.2.251:8080
+                echo export https_proxy=https://"$username":"$pass"@10.233.2.251:8080
+                break
+                ;;
+
+                *)
+                echo "Please select 1 to 4 only"
+                break
+                ;;
+
+                esac
+                done
+        break
+        ;;
+
+        *)
+        echo "Please select 1 or 2 only"
+        break
+        ;;
+esac
+done
+
+if grep -Fxq "alias autonet=/opt/autonet.sh" ~/.bashrc
+then
+echo .
+
+else
+echo 'alias autonet=/opt/autonet.sh' >> ~/.bashrc
+source ~/.bashrc
+fi
+
+wget  www.google.com
+wget -q www.google.com                  #-q : Silence mode
+if [ $? -eq 0 ]; then                   #$? : Return code       #0: "All OK" code
+    echo "Connected to Internet."
+else
+    echo "Offline not connected."
+fi
+
