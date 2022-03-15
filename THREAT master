@@ -1,0 +1,66 @@
+MISP_TAG=v2.4.150
+HOST=127.0.0.1
+PHP_VER=20180731
+CORE_VERSION=core-$(MISP_TAG)a
+MODULES_VERSION=modules-$(MISP_TAG)a
+SMTP_VERSION=latest
+MYSQL_VERSION=8.0.19
+REDIS_VERSION=5.0.6
+WEBSERVER_VERSION=latest
+BUILD_DIR=build
+OUT_DIR=release/
+BUILD=$(BUILD_NUMBER)
+ifneq ($(BUILD),)
+TIP_TAR=MISP_$(MISP_TAG)_$(BUILD).tar.gz
+else
+TIP_TAR=MISP_$(MISP_TAG).tar.gz
+endif
+DOCKER_DIR=docker/docker-misp
+TMP_DOCKER_DIR=misp_tmp
+all: clean build
+build:
+	echo "Starting build $(BUILD)"
+	mkdir -p $(BUILD_DIR); mkdir -p $(OUT_DIR);
+	cp -r development $(DOCKER_DIR)/server/
+	cp -r applications/taxii_to_misp/taxii $(DOCKER_DIR)/server/
+	cp -r applications/Anonymization/anonymize $(DOCKER_DIR)/server/
+	echo "MISP_TAG=$(MISP_TAG)" > $(DOCKER_DIR)/.env
+	echo "PHP_VER=$(PHP_VER)" >> $(DOCKER_DIR)/.env
+	echo "MISPCORE_TAG=$(CORE_VERSION)" >> $(DOCKER_DIR)/.env
+	echo "MODULES_TAG=$(MODULES_VERSION)" >> $(DOCKER_DIR)/.env
+	echo "HOST=$(HOST)" >> $(DOCKER_DIR)/.env
+	cp -a $(DOCKER_DIR) $(TMP_DOCKER_DIR); cd $(TMP_DOCKER_DIR);  docker-compose -f build-docker-compose.yml build
+	cd $(TMP_DOCKER_DIR);  docker-compose up -d
+	docker commit $$( docker ps | grep _misp_1 | awk '{print $$1}') $$(docker image ls | grep coolacid | grep $(CORE_VERSION) | awk '{print $$1}'):$(CORE_VERSION)
+	docker commit $$( docker ps | grep misp-modules_1 | awk '{print $$1}') $$(docker image ls | grep coolacid | grep $(MODULES_VERSION) | awk '{print $$1}'):$(MODULES_VERSION)
+	docker image save $$( docker image ls | grep coolacid | grep $(MODULES_VERSION) | awk '{print $$3}') -o $(BUILD_DIR)/misp_$(MODULES_VERSION).tar coolacid/misp-docker:$(MODULES_VERSION)
+	docker image save $$( docker image ls | grep coolacid | grep $(CORE_VERSION) | awk '{print $$3}') -o $(BUILD_DIR)/misp_$(CORE_VERSION).tar coolacid/misp-docker:$(CORE_VERSION)
+	docker image save $$( docker image ls | grep namshi\/smtp | awk '{print $$3}') -o $(BUILD_DIR)/smtp.tar namshi/smtp:$(SMTP_VERSION)
+	docker image save $$( docker image ls | grep redis | awk '{print $$3}') -o $(BUILD_DIR)/redis.tar  redis:$(REDIS_VERSION)
+	docker image save $$( docker image ls | grep mysql | awk '{print $$3}') -o $(BUILD_DIR)/mysql.tar  mysql:$(MYSQL_VERSION)
+	docker image save $$( docker image ls | grep webserver | awk '{print $$3}') -o $(BUILD_DIR)/webserver.tar  httpd:$(WEBSERVER_VERSION)
+	cd $(BUILD_DIR);  tar -czvf $(TIP_TAR) misp_$(CORE_VERSION).tar misp_$(MODULES_VERSION).tar redis.tar smtp.tar mysql.tar webserver.tar 
+	mv $(BUILD_DIR)/*.tar.gz $(OUT_DIR)/
+	cp -r $(DOCKER_DIR) $(OUT_DIR)/
+	cp docker/deploy_misp.sh $(OUT_DIR)/
+	cp -r applications $(OUT_DIR)/
+	echo "MISP deployment bundle " $(OUT_DIR)/$(TIP_TAR) "generated successfully."
+clean:
+	rm -rf $(BUILD_DIR);
+	rm -rf $(DOCKER_DIR)/server/development;
+	rm -rf $(DOCKER_DIR)/server/taxii;
+	rm -rf $(DOCKER_DIR)/server/anonymize	
+	[ -e $(TMP_DOCKER_DIR)/docker-compose.yml ] && ( cd $(TMP_DOCKER_DIR); docker-compose down -v --rmi all --remove-orphans; echo SUCCESS ) || echo "No docker-compose.yml to clean"
+	docker image prune -f
+	# Remove temp docker folder
+	sudo rm -rf $(TMP_DOCKER_DIR)
+cleanall:
+	# stop all containers
+	( docker container stop $$(docker container ls -aq) ) && ( echo "Stopped Containers" )
+	# remove all containers
+	( docker container rm $$(docker container ls -aq) ) && ( echo "Removed Containers" )
+	# remove all images
+	( docker rmi -f $$(docker images -a -q) ) && ( echo "Removed Images" )
+	# remove all volumes
+	( docker volume rm $$(docker volume ls -q) ) && ( echo "Remove Volumes" )
+.PHONY: clean build all
