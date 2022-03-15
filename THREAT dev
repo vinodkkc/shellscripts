@@ -1,0 +1,98 @@
+MISP_TAG=v2.4.153
+HOST=127.0.0.1
+PHP_VER=20190902
+CORE_VERSION=core-$(MISP_TAG)a
+MODULES_VERSION=modules-$(MISP_TAG)a
+SMTP_VERSION=latest
+MYSQL_VERSION=8.0.19
+REDIS_VERSION=5.0.6
+WEBSERVER_VERSION=latest
+ALIENVAULT_VERSION=1.0
+BUILD_DIR=build
+OUT_DIR=release/
+DOCKERHUB_REGISTRY=docker.acds.net.in/dockerhubproxy
+ACDS_REGISTRY=docker.acds.net.in/tip-ccm
+ifneq ($(BUILD_NUMBER),)
+ACDS_VERSION=_$(BUILD_NUMBER)
+else
+ACDS_VERSION=
+endif
+TIP_TAR=MISP_$(MISP_TAG)$(ACDS_VERSION).tar.gz
+DOCKER_DIR=docker/docker-misp
+TMP_DOCKER_DIR=misp_tmp
+all: clean build
+build:
+	echo "Starting build $(BUILD_NUMBER)"
+	mkdir -p $(BUILD_DIR); mkdir -p $(OUT_DIR);
+	cp -r development $(DOCKER_DIR)/server/
+	cp -r applications/taxii_to_misp/taxii $(DOCKER_DIR)/server/
+	cp -r applications/taxii_to_misp/taxii $(DOCKER_DIR)/alienvaulttaxiidocker/
+	cp -r applications/Anonymization/anonymize $(DOCKER_DIR)/server/
+	cp -r applications/PolicyNotification/policynotification $(DOCKER_DIR)/server/
+	echo "MISP_TAG=$(MISP_TAG)" > $(DOCKER_DIR)/.env
+	echo "PHP_VER=$(PHP_VER)" >> $(DOCKER_DIR)/.env
+	echo "MISPCORE_TAG=$(CORE_VERSION)" >> $(DOCKER_DIR)/.env
+	echo "MODULES_TAG=$(MODULES_VERSION)" >> $(DOCKER_DIR)/.env
+	echo "HOST=$(HOST)" >> $(DOCKER_DIR)/.env
+	echo "REGISTRY=$(DOCKERHUB_REGISTRY)" >> $(DOCKER_DIR)/.env
+	echo "ALIENVAULT_VERSION=$(ALIENVAULT_VERSION)" >> $(DOCKER_DIR)/.env
+	cp -a $(DOCKER_DIR) $(TMP_DOCKER_DIR); cd $(TMP_DOCKER_DIR);  docker-compose -f build-docker-compose.yml build
+	cd $(TMP_DOCKER_DIR);  docker-compose up -d
+	docker commit $$( docker ps | grep _misp_1 | awk '{print $$1}') $(ACDS_REGISTRY)/coolacid/misp-docker:$(CORE_VERSION)$(ACDS_VERSION)
+	docker commit $$( docker ps | grep misp-modules_1 | awk '{print $$1}') $(ACDS_REGISTRY)/coolacid/misp-docker:$(MODULES_VERSION)$(ACDS_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/namshi/smtp:$(SMTP_VERSION) $(ACDS_REGISTRY)/namshi/smtp:$(SMTP_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/library/redis:$(REDIS_VERSION) $(ACDS_REGISTRY)/library/redis:$(REDIS_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/library/mysql:$(MYSQL_VERSION) $(ACDS_REGISTRY)/library/mysql:$(MYSQL_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/library/httpd:$(WEBSERVER_VERSION) $(ACDS_REGISTRY)/library/httpd:$(WEBSERVER_VERSION)
+	docker tag $(DOCKERHUB_REGISTRY)/alienvault:$(ALIENVAULT_VERSION) $(ACDS_REGISTRY)/alienvault:$(ALIENVAULT_VERSION)
+	docker image save -o $(BUILD_DIR)/misp_$(MODULES_VERSION).tar $(ACDS_REGISTRY)/coolacid/misp-docker:$(MODULES_VERSION)$(ACDS_VERSION)
+	docker image save -o $(BUILD_DIR)/misp_$(CORE_VERSION).tar $(ACDS_REGISTRY)/coolacid/misp-docker:$(CORE_VERSION)$(ACDS_VERSION)
+	docker image save -o $(BUILD_DIR)/smtp.tar $(ACDS_REGISTRY)/namshi/smtp:$(SMTP_VERSION)
+	docker image save -o $(BUILD_DIR)/redis.tar  $(ACDS_REGISTRY)/library/redis:$(REDIS_VERSION)
+	docker image save -o $(BUILD_DIR)/mysql.tar  $(ACDS_REGISTRY)/library/mysql:$(MYSQL_VERSION)
+	docker image save -o $(BUILD_DIR)/webserver.tar  $(ACDS_REGISTRY)/library/httpd:$(WEBSERVER_VERSION)
+	docker image save -o $(BUILD_DIR)/alienvault.tar  $(ACDS_REGISTRY)/alienvault:$(ALIENVAULT_VERSION)
+	cd $(BUILD_DIR);  tar -czvf $(TIP_TAR) misp_$(CORE_VERSION).tar misp_$(MODULES_VERSION).tar redis.tar smtp.tar mysql.tar webserver.tar alienvault.tar
+	# Make the files and folder Available as artifacts
+	mv $(BUILD_DIR)/*.tar.gz $(OUT_DIR)/
+	cp -r $(DOCKER_DIR) $(OUT_DIR)/
+	echo "MISP_TAG=$(MISP_TAG)" > $(OUT_DIR)/docker-misp/.env
+	echo "PHP_VER=$(PHP_VER)" >> $(OUT_DIR)/docker-misp/.env
+	echo "MISPCORE_TAG=$(CORE_VERSION)$(ACDS_VERSION)" >> $(OUT_DIR)/docker-misp/.env
+	echo "MODULES_TAG=$(MODULES_VERSION)$(ACDS_VERSION)" >> $(OUT_DIR)/docker-misp/.env
+	echo "HOST=$(HOST)" >> $(OUT_DIR)/docker-misp/.env
+	echo "REGISTRY=$(ACDS_REGISTRY)" >> $(OUT_DIR)/docker-misp/.env
+	echo "ALIENVAULT_VERSION=$(ALIENVAULT_VERSION)" >> $(OUT_DIR)/docker-misp/.env
+	cp docker/deploy_misp.sh $(OUT_DIR)/
+	cp -r applications $(OUT_DIR)/
+	echo "MISP deployment bundle " $(OUT_DIR)/$(TIP_TAR) "generated successfully."
+release:
+	# Push the images to docker registry
+	echo "Pushing docker images to registry...."
+	docker push $(ACDS_REGISTRY)/namshi/smtp:$(SMTP_VERSION)
+	docker push $(ACDS_REGISTRY)/library/redis:$(REDIS_VERSION)
+	docker push $(ACDS_REGISTRY)/library/mysql:$(MYSQL_VERSION)
+	docker push $(ACDS_REGISTRY)/library/httpd:$(WEBSERVER_VERSION)
+	docker push $(ACDS_REGISTRY)/coolacid/misp-docker:$(MODULES_VERSION)$(ACDS_VERSION)
+	docker push $(ACDS_REGISTRY)/coolacid/misp-docker:$(CORE_VERSION)$(ACDS_VERSION)
+	echo "Images successfully pushed to registry."
+clean:
+	rm -rf $(BUILD_DIR);
+	rm -rf $(DOCKER_DIR)/server/development;
+	rm -rf $(DOCKER_DIR)/alienvaulttaxiidocker/taxii;
+	rm -rf $(DOCKER_DIR)/server/anonymize	
+	rm -rf $(DOCKER_DIR)/server/policynotification
+	[ -e $(TMP_DOCKER_DIR)/docker-compose.yml ] && ( cd $(TMP_DOCKER_DIR); docker-compose down -v --rmi all --remove-orphans; echo SUCCESS ) || echo "No docker-compose.yml to clean"
+	docker image prune -f
+	# Remove temp docker folder
+	sudo rm -rf $(TMP_DOCKER_DIR)
+cleanall:
+	# stop all containers
+	( docker container stop $$(docker container ls -aq) ) && ( echo "Stopped Containers" )
+	# remove all containers
+	( docker container rm $$(docker container ls -aq) ) && ( echo "Removed Containers" )
+	# remove all images
+	( docker rmi -f $$(docker images -a -q) ) && ( echo "Removed Images" )
+	# remove all volumes
+	( docker volume rm $$(docker volume ls -q) ) && ( echo "Remove Volumes" )
+.PHONY: clean build release all
