@@ -1,0 +1,59 @@
+[gerrit]
+        basePath = git
+        canonicalWebUrl = https://code.acds.net.in/
+        serverId = 133fef01-5662-4e95-b1c1-405a821b5b79
+[container]
+        javaOptions = "-Dflogger.backend_factory=com.google.common.flogger.backend.log4j.Log4jBackendFactory#getInstance"
+        javaOptions = "-Dflogger.logging_context=com.google.gerrit.server.logging.LoggingContext#getInstance"
+        user = gerrit_admin
+        javaHome = /usr/lib/jvm/java-11-openjdk-amd64
+[index]
+        type = LUCENE
+[auth]
+        type = LDAP
+        gitBasicAuthPolicy = LDAP
+[ldap]
+        server = ldap://ARPGS000034.acds.net.in
+        username = gerrit_admin@acds.net.in
+        accountBase = DC=acds,DC=net,DC=in
+        groupBase = DC=acds,DC=net,DC=in
+        accountEmailAddress = userPrincipalName
+        referral = follow
+[receive]
+        enableSignedPush = false
+[sendemail]
+        smtpServer = mail1.acds.net.in
+        smtpServerPort = 587
+        smtpEncryption=tls
+        smtpUser = acds_user1
+        smtpPass=password@123
+[sshd]
+        listenAddress = *:29418
+[httpd]
+        listenUrl = proxy-https://*:8080/
+        requestLog = true
+[cache]
+        directory = cache
+[commentlink "jira"]
+        match = ([A-Z]+-[0-9]+)
+        link = https://jira.acds.net.in:8443/browse/$1
+[commentLink.its-jira]
+        match = '([A-Z]+-[0-9]+)'
+        html = '<a href="https://jira.acds.net.in:8443/browse/$1">$1</a>'
+        association = MANDATORY
+[plugin.its-base]
+        enabled = true
+        association = SUGGESTED
+[its-jira]
+        url = https://jira.acds.net.in:8443
+        username = anil_pathak
+        commentOnChangeAbandoned = true
+        commentOnChangeCreated = true
+        commentOnChangeMerged = true
+        commentOnChangeRestored = false
+        commentOnCommentAdded = true
+        commentOnFirstLinkedPatchSetCreated = true
+        commentOnPatchSetCreated = true
+        commentOnRefUpdatedGitWeb = true
+[hooks]
+        path = /home/gerrit_admin@acds.net.in/gerrit_setup/git/Trial.git/hooks

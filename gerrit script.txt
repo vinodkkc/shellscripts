@@ -1,0 +1,75 @@
+1. create one comment-added file bash script
+2.Gerrit does not run any of the standard git hooks in the repositories it works with, but it does have its own hook mechanism included via the hooks plugin.
+3.Gerrit hooks script have to be placed in a certain location. To avoid manually updating the files there, we set up a repository for hook scripts.
+4.script file
+#!/bin/bash
+logFile=/tmp/comment-added.log
+
+CHANGEURL=git clone "https://code.acds.net.in/Trial" && (cd "Trial" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg https://code.acds.net.in/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
+PROJECT=Trial
+AUTHOR= vinodkumar_koripalli@acds.net.in
+COMMENT=created a directory
+SCORE=1
+OWNER=acds_user1@acds.net.in
+
+changeOwners=acds_user1
+username=vinodkumar_koripalli
+password=password@123
+rocketServerUrl=https://rocketchat.acds.net.in
+
+sendMessage() {
+	msg=`echo "$AUTHOR at $CHANGEURL: $SCORE, $COMMENT" | tr '\n' ' '` >> $logFile 2>&1
+
+	authData=`curl $rocketServerUrl/api/v1/login -d "username=$username&password=$password"`
+	userId=`echo $authData | jq -r '.data.userId'`
+	authToken=`echo $authData | jq -r '.data.authToken'`
+	curl -H "X-Auth-Token: $authToken" \
+		-H "X-User-Id: $userId" \
+		-H "Content-Type: application/json" \
+		-d "{\"channel\": \"@$recipient\", \"text\": \"$msg\"}" \
+		$rocketServerUrl/api/v1/chat.postMessage >> $logFile 2>&1
+}
+
+echo "$@" >> $logFile 2>&1
+
+while [ $# -gt 0 ]
+do
+	case "$1" in
+		(--change-url)    CHANGEURL="$2"; shift ;;
+		(--author)        AUTHOR="$2";    shift ;;
+		(--comment)       COMMENT="$2";   shift ;;
+		(--change-owner)  OWNER="$2";     shift ;;
+		(--Code-Review)   SCORE="$2";     shift ;;
+		(--Verified)      SCORE="$2";     shift ;;
+	esac
+	shift
+done
+
+email=${OWNER#*\(}
+recipient=${email%@*}
+authorEmail=${AUTHOR#*\(}
+reviewer=${authorEmail%@*}
+
+if [[ " ${changeOwners[*]} " == *"$recipient"* ]]; then
+        if [ "$reviewer" != "$recipient" ] ; then
+                sendMessage
+        fi
+fi
+
+==============================================================================================
+
+ git -c http.sslverify=false clone "https://vinodkumar_koripalli@code.acds.net.in/a/Trial" && (cd "Trial" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg https://vinodkumar_koripalli@code.acds.net.in/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
+
+
+
+gitdir=$(git rev-parse --git-dir); scp -p -P 29418 vinodkumar_koripalli@code.acds.net.in:hooks/commit-msg ${gitdir}/hooks/
+git push origin HEAD:refs/for/master
+
+
+
+git clone "https://vinodkumar_koripalli@code.acds.net.in/a/Trial" && (cd "Trial" && mkdir -p .git/hooks && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg https://vinodkumar_koripalli@code.acds.net.in/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
+
+
+gitdir=$(git rev-parse --git-dir); scp -p -P 29418 https://vinodkumar_koripalli@code.acds.net.in/tools/hooks/commit-msg ${gitdir}/hooks/
+
+gitdir=$`git rev-parse --git-dir`/hooks/commit-msg https://vinodkumar_koripalli@code.acds.net.in/tools/hooks/commit-msg; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)

@@ -1,0 +1,76 @@
+#!/bin/bash
+logFile=/tmp/comment-added.log
+
+CHANGEURL=https://code.acds.net.in/Trial
+PROJECT=Trial
+AUTHOR=vinodkumar_koripalli@acds.net.in
+COMMENT=created a directory
+SCORE=1
+OWNER=acds_user1@acds.net.in
+
+changeOwners=acds_user1
+username=acds_user1
+password=password@123
+rocketServerUrl=https://rocketchat.acds.net.in
+
+sendMessage() {
+msg=echo "$AUTHOR at $CHANGEURL: $SCORE, $COMMENT" | tr '\n' ' ' >> $logFile 2>&1
+
+authData=curl $rocketServerUrl/api/v1/login -d "username=$username&password=$password"
+userId=echo $authData | jq -r '.data.userId'
+authToken=echo $authData | jq -r '.data.authToken'
+curl -H "X-Auth-Token: $authToken" \
+-H "X-User-Id: $userId" \
+-H "Content-Type: application/json" \
+-d "{\"channel\": \"@$recipient\", \"text\": \"$msg\"}" \
+$rocketServerUrl/api/v1/chat.postMessage >> $logFile 2>&1
+}
+
+echo "$@" >> $logFile 2>&1
+
+while [ $# -gt 0 ]
+do
+case "$1" in
+(--change-url) CHANGEURL="$2"; shift ;;
+(--author) AUTHOR="$2"; shift ;;
+(--comment) COMMENT="$2"; shift ;;
+(--change-owner) OWNER="$2"; shift ;;
+(--Code-Review) SCORE="$2"; shift ;;
+(--Verified) SCORE="$2"; shift ;;
+esac
+shift
+done
+
+email=${OWNER#*\(}
+recipient=${email%@*}
+authorEmail=${AUTHOR#*\(}
+reviewer=${authorEmail%@*}
+
+if [[ " ${changeOwners[*]} " == *"$recipient"* ]]; then
+if [ "$reviewer" != "$recipient" ] ; then
+sendMessage
+fi
+fi
+
+
+
+
+
+
+=======================================================================
+
+1. git clone 
+2 cd Trial
+3. cd .git/hooks
+4. added comment-added file 
+5. save
+========================================================================
+
+http://sebitg.github.io/git/2014/12/09/Git-and-Gerrit-server-hooks.html
+
+
+------------------------------------------------------------------------------
+
+https://ovirt-gerrit-hooks.readthedocs.io/en/latest/Adding_hooks.html
+
+https://gerrit-review.googlesource.com/Documentation/intro-gerrit-walkthrough.html

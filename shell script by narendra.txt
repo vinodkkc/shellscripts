@@ -1,0 +1,1832 @@
+class-1
+--------
+docker -v
+nginx -v 
+uname
+
+docker -v | cut -d "" -f 3 |tr"," ""
+
+nginx -v | cut -d "" -f 3
+
+nginx -v 2>&1 | cut -d "" -f 3 | cut -d "/" -f 2
+
+----------
+#!/bin/bash
+nginxversion=$(nginx -v 2>&1 | cut -d "" -f 3 | cut -d "/" -f 2)
+dockerversion=$(docker -v | cut -d "" -f 3 |tr"," "")
+OSUname=$(uname)
+cat <<EOF | mail(/usr/bin/mail)-s "$(date):report on $(hostname)" "vinodkumar@gmail.com"
+Docker version $dockerversion
+nginxversion=$nginx version
+EOF
+-------------------------------
+every friday script will run
+
+crontab -e 
+
+
+------------------------------------------
+vedio-2
+
+env setup
+
+-----------------------------------
+vedio-3
+
+windows subsytem for linux (WSL) in an optional feature on windows 10
+
+open:start-> turn windows features on and off-->check windows subsystem for linux
+
+
+reboot
+-------------------------------------------
+vedio-4
+
+write and excute shell script
+
+basic steps to write xute bash
+
+steps:
+
+1.
+-----------------------------------------------
+vedio -5
+commands
+pwd,whoami,id,clear,touch,ls,cd,date,sort,seq,we,be,head,tails,cat,less,more,history,cp,mv,mkdir,rm,tar,zip,unzip,wget,curl,file,stat,ln,grep,awk,sed,cut,last,paste,du,df,netsat,find etc....
+
+whatis, 
+man
+---------------------------------------------
+vedio-6
+
+configuring gmail on ubuntu server to send mails
+
+cat /etc/0s-release
+step-1 get mail id and password
+step-2 switch root using sudo su -
+    and run:
+        apt-get update -y
+        apt-install sendmail mailutils -y
+step3:
+      create aythentication file
+       cd /etc/mail
+       mkdir -m 700 authinfo
+       cd authinfo/
+       vi gmail
+           AuthoInfo:"U:root" "I:your-mail" "p:yourpassword"
+step:4
+        create hash map of the file:
+          makemap hash gmail <gmail
+          note: this creates gnail.db in the same directory
+step:5 Add the following lines to send mail:mc file right above MAILER_DEFINITIONS:
+#gmail settings:
+    define (`SMART_HOST',`[smtp.gmail.com]')dnl
+    define(`RELAY MAILER ARGS',`TCP $h 587')dnl
+
+
+========================================
+vedio-6
+
+docker installation using bash script
+
+#!/usr/bin/env bash
+if [[ $(id -u) -ne 0 ]]
+then
+	echo "Please run this script from root only"
+	exit 1
+fi
+
+if [[ $(cat /etc/os-release | awk -F= '/NAME=/  && NR==1 { print $2 }' | tr -d '"' | tr [A-Z] [a-z] ) != ubuntu ]]
+then
+	echo "This script works for only ubuntu"
+	echo "Thank you!!!"
+	exit 2
+fi
+echo "###################################################################################"
+echo "# OS is identified as Ubuntu                                                      #"
+echo "# This Script will remove old docker components and install latest stable docker  #"
+echo "###################################################################################"
+sleep 1
+echo "==> Removing older version of docker if any...."
+apt remove docker docker-engine docker.io containerd runc -y 2>/dev/null
+
+echo "==> Updating exiting list of packagesss..."
+apt update -y
+
+echo "==> Installing dependencies......."
+apt install apt-transport-https ca-certificates curl software-properties-common -y
+
+echo "==> Adding the GPG key for the official Docker repository to your system..."
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+echo "==> Adding the Docker repository to APT sources:.."
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" -y
+
+echo "==> Update the package database with the Docker packages from the newly added repo..."
+apt update -y
+
+echo "==> Installing Docker ...."
+apt-cache policy docker-ce | head -5
+
+echo "==> Now installing docker....." 
+apt install docker-ce -y
+
+if [[ $? -ne 0 ]]
+then
+	echo "====>  Sorry Failed to install Docker. Try it manually  <===="
+	exit 2
+fi
+echo "====>  Docker has been installed successfully on this host - $(hostname -s)  <===="
+if systemctl status docker &>/dev/null 
+then
+	echo "====>  And it is up and running... You can verify it using cmd: systemctl status docker  <===="
+else
+	echo "====>  But it is not running. You can start it manually using cmd: systemctl start docker  <===="
+fi
+<< comment
+echo "#############################################"
+echo "# Now, You can play with docker             #"
+echo "# Docker Info on $(hostname -s) is: #"
+echo "# Docker Engine Version is: $(docker --version | cut -d " " -f3 | tr -d ",") #"
+echo "#############################################"
+comment
+
+==================================================
+section-2
+Redirection Operators & STDIN,STDOUT,STDERR
+
+ex:
+ls -lrt /etc/security
+
+ output redirection operation
+      > content
+      >> old and new content added
+input reeriction
+ < ----cat <demo.txt
+combining
+  | ---> output as a input
+
+java -version >java.version.txt
+
+
+->how to seperate STDOUT and STDERR?
+sol:- Using file descriptors
+
+A file descriptor is simply an integer number to identify STDIN,STDOUT and STDERR
+
+0 STDIN, 1 STDOUT, 2 STDERR
+>--> default to success
+1> success output
+2> error output
+ 2>&1 ---error success output into a single file
+
+&> success and output
+==========================================
+session -3
+Commands to Read a File content
+--->
+cat -n /file ---line number
+
+less /file -->not shows at a time
+
+more /etc   ---> up and down using enter key
+read file condition
+ using more,tail,grep,awk,sed
+----------------------------------------
+Commands to read afile content with conditions
+
+using more head tail grep awk sed
+
+more -n /etc --> top 2 lines
+more +n /etc --> 4 th line to displaying
+------------------------------------------
+How to read /view/Display/required range of lines from a given file?
+
+head -12 --> top 12
+head -12 xyz,txt | tail -7
+awk 'NR>=6 && NR<=12 {print}' xyz.txt
+============================================
+section -4 (grep)
+
+filter command using find in stream file
+
+grep above test.txt  
+grep "lines" test.txt
+
+How to apply grep command on the output of other command
+
+------------------------------------------------------
+adavance usuage of grep command
+
+-f ,-e,and -E
+-f Take search string/pattern from a file,one per line
+-e multiple such things
+-E grep -E "line|path|test|dev" test.txt
+-------------------
+Rules to create patterns
+
+grep -E "^xyz" file.txt  --> starts the first line of the file 
+
+grep -E "xyz$" file.txt  --> end the line of the file
+
+grep -E "^$" matches for lines which are empty
+
+grep -E "/^" ---> display only ^ symbol only
+
+. matches any all character
+grep -E "t..s" test.txt
+
+grep -E "\." test.txt
+
+\b match the empty string at the edge of word
+
+grep -E "line\b"
+grep -E "\bline"
+grep -E "\bline\b"
+
+grep -Ew "line" test.txt
+?--> grep -E "yf?" may r maynot
+*---> grep -E "yf*"  ---> zero or many times
++ ---> grep -E "yf+" ---one time r many times
+grep -E "t|t|f|y" test
+
+grep -E "[tTfy]"
+grep -E "[a-f]"
+
+grep -E "[a-ds-e]" -->a-d r se
+
+grep -E "^[abc]" test ---> line starts with a b c
+grep -E "[^abc]" test ---> escaping first caharacters
+
+{N} yje preceding string matched exactly N time
+
+grep -E "xf{3}" test
+
+grep -E "xf{3,4}\b" test
+grep -E "[[:digital:]]" test
+
+---------------------------------------
+
+simple practice with grep command
+
+1. write a patteren to match directores?
+
+ls -lrt | grep -E "^d"
+
+2. only files
+
+ls -lrt | grep -E "^-"
+
+3.find the server ipv4 info from a file
+cat text | grep -E "[0-9]{1,3}\."
+
+
+
+=============================================
+cut command
+
+cut -C 1 /etc/passwd
+cut -b 1 /etc/passwd
+
+cut -c 4 /etc/passwd
+
+cut -c 4,9 /etc/passwd
+
+cut -c 4-9 /etc/passwd
+
+cut -f 2 test
+cut -f 1,3 test
+
+cut -f 2 test
+
+cut -f 1 /etc/passwd
+
+cut -d  ':' -f 1 /etc/passwd
+
+cut -d  ':' -f 1,4 /etc/passwd
+
+cut -d  ':' -f 1 /etc/passwd --output-delimiter=""
+
+cut -f 1 test
+
+cut -sf 1 test
+
+cut -d ' ' -f 1 test
+
+cut -d ' ' -fs 1 test
+
+cut -f 1 test
+
+cat test | cut -f 1
+
+httpd -v | cut -d '/' -f 2
+
+httpd -v |grep -E "version" | cut -d '/' -f 2
+
+httpd -v |grep -E "version" | cut -d '/' -f 2| cut -d ' '-f 1
+
+===============================================
+
+AWK
+------
+httpd -v 
+httpd -v | awk ' /version/ {print}'
+
+httpd -v | awk -f '[ / ]' ' /version/{ print $4 }'
+
+syntax:
+--------
+
+awk [options] '[selection_criteria] {action}' input-file
+
+cat file | awk [options] '[selection_criteria] {action}' input-file
+
+awk '{print $1}' demo.txt.
+
+$0 --> enter file
+
+awk '{print $0}'demo.txt
+
+awk 'BEGIN {PFS="_"} {print $1,$3}' demo.txt
+
+
+NR --line r record
+
+awk '{print NR,$NF,NF}'
+
+==============================================
+
+section -7
+
+tr command translate
+
+tr [option] [set1][set2]< input file
+some command | [tr [options] [set1] [set2]]
+
+tr [:upper:] [:lower:] < xyz.txt
+
+letter
+tr 'i' 'I' <xyz.txt
+
+tr 'i' '_' <xyz.txt
+
+-d
+-----------------------------
+tee
+
+date | tree -e new.txt
+
+-------------------------------
+Section -8
+
+
+first bash shell script
+-----------------------
+echo command usuage
+
+echo display string ,message, command
+
+-------------------------------
+introduction to varaibles
+--------------------------
+Rules to define varaiable
+
+only a-z,A_Z,0-9,_ character
+less than equal to 20 only
+case sensitive x and X
+equal symbol not provide any space 
+one to another variable
+
+--------------------------------
+practice with variable 
+docker status and version
+
+docker status
+
+systemctl status docker | awk '/Active/ {print $3}' | tr -d "[()]"   --->running
+
+docker -v | awk '/version/ {print $3}' | tr -d "," ---> 19.03.12
+
+---------------------------------------------------
+working multiline blocks
+
+command << DELIMETER
+line-1
+line2
+DELIMETER
+
+note:here DELIMETER can be any string
+
+ex:
+cat << EOF
+the user is $user
+the home for this $Home
+EOF
+
+cat << Delimier | grep Line-1
+line-1
+Delimier
+
+------------------------
+24 here string document
+
+command <<< string
+tr [a-z] [A-Z] <<< "HELLO the world"
+
+-------------------------------
+
+25 writing comment for bash shell scripting
+
+sinle line , multi line 
+
+ex:'
+-
+-
+-
+'
+----------------------------
+
+Make bash script as a portable with unix/linux
+
+rhel & centos --> #!/usr/bin/bash
+ubuntu ---> #!/usr/bin/bash
+
+which env
+
+#!/usr/bin/env bash
+-------------------------------
+27 debugging bash script
+
+ two type error
+--sytanx and run time
+
+#!/usr/bin/env bash
+
+pwd
+date
+user=$9whoami)
+echo "this a script"
+echo "user the $user"
+
+debug
+----
+commands
+
+set
+bash is an interpreter
+set [option]
+set -n ---> no excution pure syntax check
+set -x prints the commands before the excuting the script
+
+set -e --> exit script if any command fails
+
+set -v --> verbose
+
+bash -x debug_script.sh
+
+#/bin/bash -x
+
+#/usr/bin/env bash 
+------------------------------
+exit status of command
+
+o-success
+1 -fail
+
+echo $?
+
+127 --command not found
+2 ---incorrrect command usuage
+-------------------------------------
+===================================
+string operations to bash script
+
+basic operations on strings
+----------------------------
+x=shell/x="shell"
+
+echo $x
+echo "${x}"
+echo "${#y}"  ----it shows characters of the line 
+concrent
+rootpath="/etc"
+filepath="/os-release"
+cpathfile=$rootpath$filepath
+lower to upper
+xU=${x^^} ---upper
+yL=${y,,}---higher
+
+Replacing the part of the string using varaiable
+
+newY=${y/shell/Bash shell} or we can also use sed command
+
+
+ Slicing the string/sub-string
+${variable_name:start_position:length}
+x ="shell scripting"
+echo "${x:2:3}"
+----------------------------------------
+String operations on paths
+
+realpath:
+
+ls
+realpath <filename>
+basename :
+basename $path tar.gz
+dirname:
+
+dirname : /home/automation/practice
+===========================================
+ INPUT and OUTPUT commands for shell scripting
+
+REPLY is the default name calling
+
+default for read command is $REPLY one 
+
+--------------------------------------
+Input with command Line arguments
+
+ex:
+
+echo "$1"
+
+echo "$2"
+echo "$3"
+echo "$4"
+o/p---shell scripting 23 ab 
+----------------------------------
+$# --> to find number of command line arguments
+$@, $* 
+
+=====================================================
+Arthematic operators
+---------------------
+using declar
+using expr
+using let
+adv
+---
+using (()) (For integers)
+using bc ()----using x=1.4,y=2.1(foat and integer)
+-----------------------------------
+case statement
+
+case $opt in
+       opt 1)
+             statements
+             ;;
+       opt 2)
+             satements
+             ;;
+           *)
+             statements
+              ;;
+ esac
+
+ex:
+================================================
+test command and chaining
+
+judge conditions
+
+test condition or [condition] or [[condition]]
+
+note:[[]] work with bash/ksh/zsh shells
+
+=======================================
+command changing operations
+
+semi colon ;
+logicsl AND operator &&
+Logical oR operator ||
+logical AND-OR Operator && ||
+
+ls;pwd --->multiple
+
+cmd1 && cmd2 ---first success then second will success
+
+which docker 2>&1 1>/dev/null && docker -v
+
+cmd1 || cmd2 -run cmd2 only if cmd 1 failed
+
+cm1 && cmd2 || cmd3--- 
+
+----------------------------------------------
+
+executing Block of code using {}
+
+-------------------------------
+{
+ls
+pwd
+date
+}
+--------------------------------
+============================================
+simple if and if-else conditional statements
+
+ex:
+cmd1 && cmd2
+
+if cmd1
+then
+   cmd2
+fi
+
+---------------------
+if which docker 2>/dev/null 1>/dev/null
+then
+   echo "Docker is installed on this host"
+   echo "The docker version is : $(docker -v)"
+fi
+-------------------------------
+which docker 2>&1 1>/dev/null
+
+if [[$? -eq 0]]
+then
+  echo "Docker is installed on this host"
+   echo "The docker version is : $(docker -v)"
+fi
+--------------------------------------
+
+if true
+then
+  echo "Always this will excute"
+fi
+
+if false
+then
+   echo "it wont excute"
+fi
+---------------------------------------
+
+simple if-else statement
+
+cmd1 && cmd2 || cmd3
+
+if cmd1
+then
+  cmd2
+else
+   cmd3
+fi
+----------------------------
+cmd1 && {cmd2;cmd3}||cmd4
+
+if cmd1
+then
+   cmd2
+   cmd3
+else
+   cmd4
+fi
+
+
+-----------------------------
+if which apache2
+then
+ echo "apache2 installed"
+ echo "apache version"
+else
+  echo "apache not installed"
+fi
+-----------------------------
+simple shell scripts
+
+to verify the shell script running user is root or not user is having sudo privileges or not
+
+whoami
+id
+id -u
+id -un
+sudo su -
+id -u
+id -un
+ -----------------
+
+#!/usr/bin/env bash
+
+userId=$(id -u)
+
+[[$userId -eq 0]] && echo "you are root"  || echo "you are not root"
+
+------------------------------------
+if [[ $(id -u) -eq 0 ]]
+then
+   echo "you are root"
+else
+   echo "you are not root"
+fi
+---------------------------------------
+user is having sudo previllages
+
+sudo -v  ---root user checking
+echo $?
+--------------------------------------
+sudo -v 1>/dev/null 2>/dev/null && echo "the user $(id -un) is having sudo previllages $(hostname)" || echo "the user $(id -un) used in not host $(hostname)
+ 
+-------------------------------------------------
+simple shell script
+
+to start docker service
+ 
+ex
+#!/usr/bin/env bash
+
+echo "starting docker service"
+systemctl start docker
+echo "successfully started docker service"
+systemctl start docker
+if [[$? -eq 0 ]] then
+echo "docker started"
+else
+echo "docker failed"
+fi
+-----------------------------------
+
+systemctl start docker
+if systemctl status docker
+ then
+echo "docker up and running"
+else
+echo "starting docker service"
+systemctl start docker
+echo "successfully started docker service"
+fi
+------------------------------------------
+it will work only root user
+
+if [[ $(id -u) -eq 0 ]]
+then
+if systemctl status docker
+ then
+echo "docker up and running"
+else
+echo "starting docker service"
+systemctl start docker
+echo "successfully started docker service"
+fi
+else
+echo "sorry u are not allowed docker service"
+fi
+---------------------------------------
+
+if [[ $(id -u) -eq 0 ]]
+then
+if systemctl status docker
+ then
+echo "docker up and running"
+else
+echo "starting docker service"
+systemctl start docker
+echo "successfully started docker service"
+fi
+else
+ if sudo -v 1>/dev/null 2>/dev/null  --->checking sudo previllages
+  then
+if systemctl status docker
+ then
+echo "docker up and running"
+else
+echo "starting docker service"
+systemctl start docker
+echo "successfully started docker service"
+fi
+  else
+ echo "sorry u are not allowed docker service"
+fi
+--------------------------------------------------
+
+ 
+ Logical operators
+
+-------------
+
+and && 0r -a
+or   || or -0
+not !
+-------------------------
+#!/usrbin/env bash
+
+read -p :enter number: " num
+
+if [[ $num -ge 50 ]]
+then
+  echo "$num is 50"
+else
+  echo "$num is less than"
+fi
+------------------------------
+AND operator
+#!/usrbin/env bash
+
+read -p :enter number: " num
+
+#if [[ $num -ge 50 ]] && [[$num -le 100]]
+
+if [[ $num -ge 50 && $num -le 100]]
+if [ $num -ge 50 -a $num -le 100 ]
+then
+  echo "$num is range of 50 to 100"
+else
+  echo "$num is not in the range of 5200"
+fi
+
+--------------------------------
+or operator
+
+read -p "enter your confirmation: (say yes or no)" cnf
+
+if [[ $cnf == "yes"]]
+then
+  echo "starting docker"
+  sudo systemctl start docker
+else
+  echo "skipping"
+fi
+-------------------------------
+read -p "enter your confirmation: (say yes or no)" cnf
+
+if [[ $cnf == "yes"]] [[ $cnf == "y"]]
+then
+  echo "starting docker"
+  sudo systemctl start docker
+else
+  echo "skipping"
+fi
+--------------------------------
+read -p "enter your confirmation: (say yes or no)" cnf
+
+if [[ $cnf == "yes" || $cnf == "y"]]
+then
+  echo "starting docker"
+  sudo systemctl start docker
+else
+  echo "skipping"
+fi
+-------------------------------
+read -p "enter your confirmation: (say yes or no)" cnf
+
+if [ $cnf == "yes" -o $cnf == "y"]
+then
+  echo "starting docker"
+  sudo systemctl start docker
+else
+  echo "skipping"
+fi
+-------------------------------------
+not operator
+
+[[3 -gt 1]] --true
+----------
+
+[[ ! 3 -gt 1]] --false
+
+---------------------------------------
+
+what is the difference between [] and [[]]?
+
+and also (())
+
+---------------------------
+#!/user/bin/env bash
+read -p "do you wana start docker ? say res or no : " usercnf
+
+if [ $usrcnf = yes ]
+then 
+ echo "starting docker"
+ sudo systemctl start docker
+else
+   echo "skipping "
+fi
+----------------------------
+#!/user/bin/env bash   ---->qutations
+read -p "do you wana start docker ? say res or no : " usercnf
+
+if [ "$usrcnf" = "yes" ]
+then 
+ echo "starting docker"
+ sudo systemctl start docker
+else
+   echo "skipping "
+fi
+----------------------------
+#!/user/bin/env bash -----doble sqare
+read -p "do you wana start docker ? say res or no : " usercnf
+
+if [[ $usrcnf = yes ]]
+then 
+ echo "starting docker"
+ sudo systemctl start docker
+else
+   echo "skipping "
+fi
+
+--------------------------------
+#!/user/bin/env bash
+read -p "do you wana start docker ? say res or no : " usercnf
+
+if [[ $usrcnf = yes || $usrcnf = y ]]
+if [ $usrcnf = yes -0 $usrcnf = y ] --> single quote will use letter
+if [[$usrcnf =~ yes|y]] 
+then 
+ echo "starting docker"
+ sudo systemctl start docker
+else
+   echo "skipping "
+fi
+------------------------------------------
+
+[[x >y ]] --fail
+[[x<y]] ---success
+[[2 -gt 1]] 
+((2>1))
+-------------------------------------------
+if -elif-elif-else conditional statement
+
+script to start, stop and restart docker
+and also find the version of docker
+
+#!/usr/bin/ev bash
+
+read -p "enter your option: " option
+
+if [[$option == start]]
+then
+ echo "starting docker"
+ systemctl start docker
+elif[[$option == stop]]
+then 
+  echo "stoping docker"
+   systemctl stop docker
+elif [[$option == restart]]
+  then
+     echo "docker restarted"
+     systemctl restart docker
+elif [[$option ==version]]
+then
+   version=$(docker -v | cat -d "" -f 3 | tr -d ",")
+    echo "the version is $version"
+else
+   echo "you option is invalid" 
+   echo "valid option are: start stop restart and version"
+fi
+-------------------------------------
+if [[$(id -u) -ne 0 ]]
+
+then
+ echo "you are not allowed to run"
+ exit 1
+fi
+read -p "enter your option: " option
+
+if [[$option == start]]
+then
+ echo "starting docker"
+ systemctl start docker
+elif[[$option == stop]]
+then 
+  echo "stoping docker"
+   systemctl stop docker
+elif [[$option == restart]]
+  then
+     echo "docker restarted"
+     systemctl restart docker
+elif [[$option ==version]]
+then
+   version=$(docker -v | cat -d "" -f 3 | tr -d ",")
+    echo "the version is $version"
+else
+   echo "you option is invalid" 
+   echo "valid option are: start stop restart and version"
+fi
+-------------------------------------------------
+Command Line arguments
+
+read
+command line
+
+ex
+#!/usr/bin/env bash
+
+read -p "enter service status:" servicename
+read -p "enter service status:" action
+
+systemctl status ${servicename}
+systemctl ${action} ${servicename}
+--------------------------------------
+cml
+serviceName=$1
+action $2
+
+sudo systemctl ${action} ${servicename}
+
+------------------------------
+
+if [[ $# -ne 2]]
+then
+   echo "hey admin '
+   echo ;$0 <service name> <action to execute service>
+    exit 1
+serviceName=$1
+action $2
+
+sudo systemctl ${action} ${servicename}
+
+
+
+-------------------------------------------
+scheduling jobs with at and crontab
+
+part-1
+
+log files backup
+
+ex
+
+sudo su
+at 01:57
+bash my_website_bkup.sh
+ctrl +d ---save the job
+
+-----------------
+echo "bash <cript> | at 3;00 am
+atq ---list 
+ex:
+
+at 10:00AM sun
+---------------------------------------
+scheduling jobs with crontab
+
+syntax
+ minutes hors days months weekdays command/script
+ 0-59    0-23  1-31 1-12  0-6 (sunday -0,monday -1,tuesday 2
+---------------------------------------
+crontab -e to schedule a job
+crontab -l to list the jobs (crontab -u user_name -1)
+use crontab -r to remove jobs
+
+***** ls -lrt /tmpdemo.txt
+
+sudo su
+ls
+
+#!/usr/bin/bash
+
+SRC="/var/www/html"
+DEST=$(date '+%b_%d_%H_%M_%s')
+[[ -e $DEST ]] || mkdir $DEST
+
+tar -czvf $DEST/my_website.com_bkup_${EDTB}.tar.gz $SRC
+
+
+------------------------------------------
+
+
+cron tab -e to schedule a job
+cron tab -l to list the jobs(crontab -u user_name-l)
+cron tab -r to remove jobs
+
+
+/root/website_backup.sh
+date
+
+min hour day month weekday 
+58   2    30  11    6
+
+crontab -e /root/website_backup.sh
+---------------------------------------
+everyday 9 am and 9pm
+
+0 9 ***
+
+0 21 * * *
+0 9,21 * * *   at atime
+
+0 */2   --- every 2 hrs 
+
+@yearly
+
+---------------------------------------
+shell script to send automatic mail alert when Ram memory gets low
+
+
+#!/usr/bin/env bash 
+
+free -m, free -g
+
+grep -E "total" |awk '{print $4}'
+
+#!/usr/bin/env bash 
+
+To="devops@com"
+
+TH_L=400
+
+free_Ram=$(free -mt | grep -E "Total" | awk '{print $4}')
+
+if [[ $free_Ram -lt $TH_L]]
+then
+  echo -e "server is running with low ram size\nAvailable Ram is :$free_Ram  | /bin/mail -s "RAM INFO" $To
+fi
+
+------------------------------------------------
+
+bash shell script to monitor disk space usuage with email alerts
+
+1. df -h
+2.df -h | grep -Ev "udev|tmp"
+
+#!/usr/bin/env bash
+
+mailId="dowithng@gmail.com"
+echo "the file utilization 0n $(hostname -s) is :\n $(df -H | grep -Ev "udev|tmpfs")" | /usr/bin/mail -s " File system utilization" $MailId"
+
+
+particular file system only
+-----------------------------
+emailID="downscript"
+FU=$(df -H | grep /dev/xvda | awk '${print $3}' | tr -d "%")
+if [[ $FU -ge 80]]
+then
+  echo "the file system /dev/xvds usuage is : $FU" ! /usr/bin msil -s "file system " "EmailID"
+
+-------------------------------------------
+=========================================================
+Introduction to arrays
+Associative Arrays
+================================================
+introduction in Loops
+
+#!/bin/bash
+
+for each in 1 2 3 4 5
+do 
+echo " welcome to shell scripting"
+
+done
+------------------------------------
+[[ -x httpod_into.sh ]] && "hhtp these fil ehaving excution permission || echo "no have excution permission"
+-------------------------------------------------
+if
+then
+else
+fi
+
+-------------------------------------
+for each in - - -
+do 
+  if [[ -x $each]]
+then
+else
+fi
+done
+--------------------------------------------
+automation takes all files
+
+for each in $(1s)
+do
+  if [[-x $each]]
+then
+else
+fi
+done
+------------------------
+any path
+given_path=$1
+for each in $(ls $given_path)
+do
+  if [[-x $each]]
+then
+else
+fi
+done
+----------------------------------
+f [[ $# -ne 1]]
+then
+  echo "usage $0 <anypath>
+  exit 1
+fi
+--------------------------------------
+for loop
+
+1.basic for loop
+for variable in list of variables
+  do
+ command1
+  command2
+done
+----------------------------------
+ex:
+
+for each_value in 1 2 3 
+do
+  echo "these ia a loop"
+done
+--------------------------
+for each_value in 1 2 3 
+do
+  echo "these is each value is $each_value"
+done
+
+------------------------------------------------
+for each_file in $ls
+do
+  echo "files "$ls"
+done
+-------------------------------
+c lamguage for loop
+
+for ((initilization;condition;increment/decrement))
+do
+  command1
+  command2
+done
+------------------------------------
+ex:
+
+for ((cnt =1;cnt<=10;cnt++))
+do
+  each "these is for cllop"
+done
+---------------------------------------
+seq 1 20
+-------------------
+clear
+echo "we are working on loops"
+for ((cnt=1;cnt<=20;cnt++))
+
+do
+echo "$(cnt)"
+done
+------------------------------
+Infinity for loop
+
+for ((;;))
+do
+  command1
+  command2
+done
+-----------------------------------------------
+ex:
+
+echo "this is for a loop"
+for ((;;))
+do
+  echo "this is for loop"
+  sleep
+done
+-------------------------------------
+
+echo "this is for a loop"
+cnt=1
+for ((;;))
+do
+   
+  echo "this is for loop"
+((cnt++)) 
+ sleep 1
+if [[ $cnt -eq 10 ]]
+then 
+    break
+fi
+done
+-------------------------------------------------------
+
+Installing multiple softwares using loop commands
+
+
+shell script to install vim,httpd,nginx,package
+
+ex:
+#!/bin/bash
+
+yum install vim -y
+
+if [[ $(id -u) -ne 0 ]]
+then
+   echo "please run the root user
+   exit 1
+fi
+-----------------------------------
+
+if [[ $(id -u) -ne 0 ]]
+then
+   echo "please run the root user
+   exit 1
+fi
+
+if which vim &> /dev/null
+then
+  echo "Already vim is installed"
+else
+  echo "installing vim ......"
+  yum install vim -y &> /dev/null
+
+ if [[$? -eq 0]]
+then
+   echo "successfully installed vim pkg"
+else
+    echo "unable to installed"
+fi
+------------------------------------------------
+i want to install multiple packages
+
+
+
+-------------------------------------
+#!/bin/bash
+
+yum install vim -y
+
+if [[ $(id -u) -ne 0 ]]
+then
+   echo "please run the root user
+   exit 1
+fi
+
+for each_pkg in vim httpd nginx
+do
+  if which vim &> /dev/null
+then
+  echo "Already vim is installed"
+else
+  echo "installing $each_package ......"
+  yum install vim -y &> /dev/null
+
+ if [[$? -eq 0]]
+then
+   echo "successfully installed vim pkg"
+else
+    echo "unable to installed"
+fi
+done
+
+---------------------------------------
+
+
+
+if [[ $# -eq 0]]
+then
+   echo "usuage : $0 pkg1 pkg2......"
+   exit 2
+fi
+---------------------------------------------
+difference between $@ and $*
+
+ex:
+
+echo "$@"
+echo "$*"
+
+same output
+
+
+for loop
+echo "the below output is for \$*
+
+for each in "$*"
+do
+echo "$each"
+done
+
+echo "the below output is for \$@
+
+for each in "$@"
+do
+   echo $each
+done
+
+cmd line : 1 2 3 4 5
+-----------------------------
+$* consider as a same file
+
+$@ consider as a five arguments
+
+---------------------------------------
+
+Loop control statements and commands to control
+
+--------------------
+
+break and continue
+
+for each_file in $(ls *.txt)
+do
+echo "$each_file"
+done
+
+-------------------------------------
+
+for each_file in $(ls *.txt)
+do
+echo "$each_file"
+done
+------------------
+
+cnt=1
+for each_file in $(ls *.txt)
+do
+ if [[ $cnt -eq 1]]
+then
+  echo "$each_line"
+     ((cnt ++))
+fi
+done
+-----------------------------------
+
+for each_file in $(ls *.txt)
+do
+ echo "each_file"
+ break
+done
+
+echo "for loop is over"
+----------------------------
+
+echo "starting the loop"
+cnt=1
+for each_file in $(ls *.txt)
+do
+   if [[ $cnt -eq 1]]
+   then 
+     echo "$each_file"
+     break
+   fi
+done
+----------------------------
+continue
+
+ex:
+
+echo "starting in loop"
+for each in $(seq 1 10)
+do
+  echo "$each"
+done
+echo "for loop is over"
+
+------------------------------------
+echo "starting in loop"
+for each in $(seq 1 10)
+do
+   if [[ $each -gt 5]]
+ then
+     break
+ fi
+  echo "$each"
+done
+echo "for loop is over"
+-------------------------------------
+ex:
+
+for each in $(seq 1 10)
+do
+  if [[ $each -ne 5]]
+  then
+    echo "$each"
+  fi
+done
+----------------------------------------
+
+for each in $(seq 1 10)
+do
+  if [[$each -eq 5]]
+  then
+    continue
+  fi
+  echo "$each"
+done
+-------------------------------------
+For loop with Arrays
+
+for each value in docker nginx
+do
+
+  echo " the service is :$eachvalue'
+
+done
+---------------------------------
+myservices=(docker nginx)
+
+for eachvalue in $(myservice[@])
+do
+  echo "service in $eachvalue
+done
+----------------------------------
+myservices=(docker nginx)
+for eachservice in ${myservices[@]}
+do
+   systemctl ststus $eachservice 1>/dev/null 2>/dev/null
+   if [[! $? -eq 0]]
+   then
+     echo "the service $eachservice is not running "
+     echo "the service #eachservice is not running on $(hostname -s)" | /usr/bin/mail -s "status of $eachservice" "gmail.com"
+    fi
+done
+
+---------------------------------------------------
+---------------------------------------------------
+Working with Remote servers
+
+1. Login into remote server from local server using ssh
+
+----------------------------------------
+ssh - secure shell protocal
+
+password, password authentication
+
+ssh user@ewmote ip
+
+ ----------------------------------------
+Executing commands on remote server without logging into remoteserver
+
+-----------------------------------------------------
+providing password for ssh using sshpass
+--------------------------------------------------------
+Executing  multiple commands on multiple servers
+--------------------------------------------------------
+remote servers
+
+ssh -0 stricthostkeychecking=no automate@<ip> "date"
+
+sshpass -f pass ssh -0 stricthostkeychecking=no automate@<ip> "date"
+
+multiple servers run in commands
+-------------------------------
+for each_cmd in date uptime "free-m"
+do
+  echo "The $each_cmd command connected to 10.232.1."
+  sshpass -f pass ssh -0 strickHostKeyChecking=no autiomation@10.232.21.23 " $each_cmd
+done
+
+----------------------------------------------------
+
+for each_server in 100.23.21.21 12.31.232
+do
+  for each_cmd in date uptime "free-m"
+do
+  echo "The $each_cmd command connected to $each_server"
+ # sshpass -f pass ssh -0 strickHostKeyChecking=no autiomation@10.232.21.23 " $each_cmd
+   ssh -o strickHostkeychecking=No automatication@$each_user "search_cmd"
+done
+done
+---------------------------------------------
+shell script excute commands in different servers
+
+
+for each_server_info in $cat servers_info.txt
+do
+  echo "$each_server_info"
+done
+------------------------------
+while loop
+
+while read each_server_inf
+do
+  echo "$each_server_info"
+done
+---------------------------------
+while read ser user pass cmd
+do
+ echo "$ser"
+done <servers_info.txt
+
+----------------------------------
+while read ser user pass cmd
+do
+ sshpass -p $pass ssh -o StrickHostKeyChecking=No $user@$$ser "$cmd"
+
+ echo "$ser"
+done <servers_info.txt
+------------------------------------------
+
+while read ser user pass cmd
+do
+  echo " Excuting $cmd on $ser with user as  $user and password
+done
+------------------------------
+while loops
+
+for ((;;))
+do
+  echo "ok"
+done
+------------------------
+ex:
+while true
+do
+  echo "ok"
+done
+-----------------------
+while loop with command
+
+while command
+do
+ statement
+done
+-------------------------
+while date &> /dev/null
+do
+  echo "date is command"
+done
+----------------------------
+start=1
+while [[ $start -le 10]]
+do
+echo "$start"
+   ((start ++))
+done
+----------------------------------
+way to use while loop
+
+while readline
+do
+  statement/command
+done
+-----------------
+file_name= "servers_info.txt"
+while read each_line
+do
+ echo "$each_line
+done < $file_name
+-------------------------------------------------
+
+reading command line
+
+cat server_info.txt | while read line
+
+do
+ echo "$each_line"
+done < $file_name
+
+-----------------------------------------------
+while loop with IFS
+
+while read line
+do
+echo "$line"
+done <server_info.txt
+
+----------------------------------------------
+cat servers_info.txt | awk'NR!=1 {print}' | while IFS="" read f1 f2 f3 f4 f5
+
+do
+echo "$f1,$f2"
+done
+-------------------------------------------
+
+Functions
+=================
+define a function and calling a function
+
+
+ex:
+read -p "enter first number "  num1
+read -p "enter first number "  num2
+
+sum=$((num1+num2))
+
+echo "the addition of $num1 and $num2 is : $sum"
+
+sub=$((num1-num2))
+
+echo "the addition of $num1 and $num2 is : $sub"
+
+----------------------------------------------------
+ex:
+read_input()
+{
+read -p "enter first number "  num1
+read -p "enter first number "  num2
+}
+addition()
+{
+sum=$((num1+num2))
+
+echo "the addition of $num1 and $num2 is : $sum"
+}
+substitution()
+{
+sub=$((num1-num2))
+
+echo "the addition of $num1 and $num2 is : $sub"
+}
+
+read_input
+substitution
+addition
+-------------------------------------------------
+
+
+scope of the variables in function
+and
+returning variable value from a Function
+
+ex:
+
+global and local
+--------------------------------
+
+display()
+{
+  echo "you called these function"
+}
+
+display
+-----------------------
+passing parameters to a function
+
+addition()
+{
+m=$1
+n=$2
+ result=$((m+n))
+ echo "the addition 0f $x and $y is: $result"
+}
+
+x=5
+y=2
+addition$x $y
+p=3
+q=7
+addition $p $c
+
+addition 4 5
+
+==================================
+printf command
+
+we can format the example
+
+echo "-----------------"
+echo " git installation "
+echo "------------------------"
+
+----------------------------------------------
+tput cols
+tput lines
+--------------------------
+printf "%113s" " "
+
+printf "format\n" "arguments"
+
+printf "%d %d\n" "$x" "$y"
+
+printf "%s %d %f\n" "$my_name" "$X" "$y"
+
+printf "%05d\n" "$x"
+
+printf "%07d\n" "$x"
+
+-------------------------------------------
+
+printf "%40f\n" "$y"
+======================================================
+Introduction to AWK command/script
+-------------------------------------
+what is awk?
+
+systemctl status httpd
+
+systemctl status httpd |awk 'NR==3 { print $2 }'
+
+---------------------------------------------
+AWK command in liunux is most important command used to finf and replace the text
+
+--->awk reads data from file or from its standard input,and outputs to its standard output
+
+systemctl status httpd | awk 'NR==3 {print $2}'
+
+cat /etc/passwd
+
+awk 'NR==3 { print $2 }' demo.txt
+
+By default fields are seperated based on space.(note: we can also the field separator with -f option)
+
+awk has its own predefined varaibles like $0,$1,$2,......$n and NR,NF
+
+syntax:
+
+awk options 'pattern {action}' filenamre
+
+command | awk options 'pattern {action}'
+------------------------------------------------
+NR==3 ---line no 3
+
+-F fs to specify a field seperator
+-v var=valure
+-f file
+
+awk '{print $2}'
+
+
+awk -f : '{print $2}'
+-------------------------------
+
+
+
+
+
+

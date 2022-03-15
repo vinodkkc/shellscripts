@@ -1,0 +1,22 @@
+${BUILD_LOG_EXCERPT, start="\\b(start-here)\\b", end="\\b(end-here)\\b"}
+
+
+
+
+${BUILD_LOG, maxLines=9999,escapeHtml=true}
+
+sonar.projectKey=test
+
+sonar.projectName=test
+
+sonar.sources=/var/lib/jenkins/workspace/New_FS_Build
+
+#sonar.login=
+
+#sonar.projecttoken=f62c33c3f14f222537f929dd4078346b187c23d8
+
+#sonar.password=
+
+#sonar.binaries = <SDL="sonar.java.binaries" value="target"/>
+
+sonar.sourceEncoding=UTF-8
