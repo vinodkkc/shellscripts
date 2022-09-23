@@ -1,0 +1,133 @@
+#!/bin/bash
+
+MACHINENAME=$1
+
+CPU=$2
+
+MEMORY_VDI=$3
+
+MEMORY=$4
+
+mount 10.253.26.39:/var/tmp/ISO /mnt
+
+Cd /mnt
+
+if [ -f ./64_dvd_4788fb7c.iso ]; then
+
+  wget https://archive.org/download/en_windows_10_business_editions_version_20h2_x64_dvd_4788fb7c/en_windows_10_business_editions_version_20h2_x64_dvd_4788fb7c.iso
+
+   else
+       already iso file available
+
+fi
+
+VBoxManage createvm --name $MACHINENAME --ostype Windows10_64 --register --basefolder `pwd`
+
+# Show Info of created Vm
+ VBoxManage showvminfo $MACHINENAME
+
+# Define Memory and network
+ VBoxManage modifyvm $MACHINENAME --cpus $CPU --memory $MEMORY --vram 32 --accelerate3d on --audio oss
+
+VBoxManage storagectl $MACHINENAME --name "IDE Controller" --add ide --controller ICH6
+
+VBoxManage createhd --filename `pwd`/$MACHINENAME/$MACHINENAME_DISK.vdi --size $MEMORY_VDI --format VDI
+
+#Create Disk and connect Windows Iso
+
+VBoxManage storageattach $MACHINENAME --storagectl "IDE Controller" --port 0 --device 0 --type hdd --medium `pwd`/$MACHINENAME/$MACHINENAME_DISK.vdi
+
+VBoxManage storageattach $MACHINENAME --storagectl "IDE Controller" --port 1 --device 0 --medium `pwd`/en_windows_10_business_editions_version_20h2_x64_dvd_4788fb7c.iso --type dvddrive
+
+VBoxManage modifyvm $MACHINENAME --boot1 dvd --boot2 disk
+
+#bidirectional functionality
+
+VBoxManage modifyvm $MACHINENAME --nic1 bridged --bridgeadapter1 enp44s0
+
+VBoxManage modifyvm $MACHINENAME --clipboard-mode bidirectional
+
+VBoxManage modifyvm $MACHINENAME --draganddrop bidirectional
+
+#Start Vm
+
+VBoxHeadless --startvm $MACHINENAME
+
+Vii) the execute your script
+
+Command:- ./ <scriptname> <machinename> <cpu> <memory>
+
+Linux VM
+
+7) Write script for Linux VM
+
+i) Create one directory named as script
+
+command:- mkdir scripts
+
+ii) Go inside that
+
+command:- cd scripts
+
+iii) inside scripts directory create one file for script
+
+command:- touch script.sh
+
+iv) check it is created or not
+
+command:- ls
+
+v) Give sudo permission to your file
+
+command:- chmod -R 777 .
+
+vi) write script for windows VM so go inside script.sh file
+
+command:- vi script.sh
+
+#!/bin/bash
+ MACHINENAME=$1
+ cpu=$2
+ memory=$3
+
+mount 10.253.26.39:/var/tmp/ISO /mnt
+
+Cd /mnt
+
+# Download debian.iso
+ if [ ! -f ./*-amd64.iso ]; then
+
+   wget https://releases.ubuntu.com/20.04/ubuntu-20.04.4-desktop-amd64.iso
+
+   else
+     iso file already downloaded exists
+
+fi
+
+#Create VM
+ VBoxManage createvm --name $MACHINENAME --ostype "Debian_64" --register --basefolder `pwd` 
+ #Set memory and network
+ VBoxManage modifyvm $MACHINENAME --ioapic on
+ VBoxManage modifyvm $MACHINENAME --cpus $cpu --memory $memory --vram 128
+ VBoxManage modifyvm $MACHINENAME --nic1 bridged --bridgeadapter1 enp44s0
+ VBoxManage modifyvm $MACHINENAME --clipboard-mode bidirectional
+ VBoxManage modifyvm $MACHINENAME --draganddrop bidirectional
+
+#Create Disk and connect Debian Iso
+ VBoxManage createhd --filename `pwd`/$MACHINENAME/$MACHINENAME_DISK.vdi --size 5120 --format VDI
+ VBoxManage storagectl $MACHINENAME --name "SATA Controller" --add sata --controller IntelAhci
+ VBoxManage storageattach $MACHINENAME --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium  `pwd`/$MACHINENAME/$MACHINENAME_DISK.vdi
+ VBoxManage storagectl $MACHINENAME --name "IDE Controller" --add ide --controller PIIX4
+ VBoxManage storageattach $MACHINENAME --storagectl "IDE Controller" --port 1 --device 0 --type dvddrive --medium `pwd`/ubuntu-20.04.3-desktop-amd64.iso
+ VBoxManage modifyvm $MACHINENAME --boot1 dvd --boot2 disk --boot3 none
+
+#Enable RDP
+ #VBoxManage modifyvm $MACHINENAME --vrde on
+ #VBoxManage modifyvm $MACHINENAME --vrdemulticon on --vrdeport 10001
+
+#Start the VM
+ VBoxHeadless --startvm $MACHINENAME
+
+Vii) the execute your script
+
+Command:- ./ <scriptname> <machinename> <cpu> <memory>
